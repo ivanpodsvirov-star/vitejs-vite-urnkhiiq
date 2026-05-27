@@ -165,7 +165,11 @@ export default function App() {
   const [adminHit, setAdminHit] = useState(false);
   const [adminMood, setAdminMood] = useState("normal");
   const [tapCount, setTapCount] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [musicEnabled, setMusicEnabled] = useState(false);
   const adminTargetRef = useRef(null);
+  const audioRef = useRef(null);
+  const musicTimerRef = useRef(null);
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -206,6 +210,111 @@ export default function App() {
       setFloatingText((prev) => prev.filter((item) => item.id !== id));
     }, 650);
   }
+
+  function getAudioContext() {
+    if (!soundEnabled && !musicEnabled) return null;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return null;
+
+    if (!audioRef.current) audioRef.current = new AudioContext();
+    if (audioRef.current.state === "suspended") audioRef.current.resume();
+    return audioRef.current;
+  }
+
+  function playTone(freq = 440, duration = 0.08, volume = 0.035, type = "sine") {
+    if (!soundEnabled) return;
+
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration + 0.02);
+  }
+
+  function playClickSound() {
+    playTone(620 + Math.random() * 90, 0.055, 0.026, "sine");
+  }
+
+  function playMoodSound() {
+    playTone(420, 0.06, 0.022, "triangle");
+    setTimeout(() => playTone(520, 0.07, 0.018, "triangle"), 55);
+  }
+
+  function playWinSound() {
+    playTone(660, 0.09, 0.04, "sine");
+    setTimeout(() => playTone(880, 0.11, 0.04, "sine"), 90);
+    setTimeout(() => playTone(1320, 0.16, 0.035, "sine"), 190);
+  }
+
+  function playUpgradeSound() {
+    playTone(520, 0.07, 0.028, "triangle");
+    setTimeout(() => playTone(700, 0.08, 0.026, "triangle"), 70);
+  }
+
+  function startMusic() {
+    const ctx = getAudioContext();
+    if (!ctx || musicTimerRef.current) return;
+
+    const notes = [196, 247, 294, 330, 294, 247];
+    let step = 0;
+
+    musicTimerRef.current = setInterval(() => {
+      if (!musicEnabled) return;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      const now = ctx.currentTime;
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(notes[step % notes.length], now);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(900, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.012, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1);
+      step += 1;
+    }, 780);
+  }
+
+  function stopMusic() {
+    if (musicTimerRef.current) {
+      clearInterval(musicTimerRef.current);
+      musicTimerRef.current = null;
+    }
+  }
+
+  function toggleMusic() {
+    setMusicEnabled((prev) => {
+      const next = !prev;
+      if (!next) stopMusic();
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    if (musicEnabled) startMusic();
+    else stopMusic();
+
+    return () => stopMusic();
+  }, [musicEnabled]);
 
   function showAdminThought() {
     const phrase = adminThoughts[Math.floor(Math.random() * adminThoughts.length)];
@@ -262,6 +371,7 @@ export default function App() {
   }, [showRules]);
 
   function showWin() {
+    playWinSound();
     setGoldLight(null);
     setWinMessage(true);
 
@@ -327,6 +437,8 @@ export default function App() {
   }
 
   function clickAdmin() {
+    playClickSound();
+
     const nextTap = tapCount + 1;
     setTapCount(nextTap);
 
@@ -345,6 +457,7 @@ export default function App() {
       const pool = nextTap % 25 === 0 || Math.random() > 0.86 ? rareMoods : commonMoods;
       const nextMood = pool[Math.floor(Math.random() * pool.length)];
       setAdminMood(nextMood);
+      playMoodSound();
       setTimeout(() => setAdminMood("normal"), 1500);
     }
 
@@ -374,6 +487,8 @@ export default function App() {
   function upgradeChance() {
     if (game.coins < upgradeCost) return;
     if (manualChance >= 1.5) return;
+
+    playUpgradeSound();
 
     setGame((prev) => ({
       ...prev,
@@ -423,6 +538,10 @@ export default function App() {
       )}
 
       <div className="topPanel">
+        <div className="soundPanel">
+          <button className="soundButton" onClick={() => setSoundEnabled((prev) => !prev)}>{soundEnabled ? "Звук: вкл" : "Звук: выкл"}</button>
+          <button className="soundButton" onClick={toggleMusic}>{musicEnabled ? "Музыка: вкл" : "Музыка: выкл"}</button>
+        </div>
         <div className="titleFrame">
           <div className="miniText">NITECORE</div>
           <h1>Кликни админа</h1>
@@ -598,6 +717,8 @@ button:focus, button:focus-visible, a:focus, a:focus-visible, .adminButton:focus
 .adClose { background: #181818; color: #facc15; border: 1px solid rgba(250,204,21,.35); }
 @keyframes adPop { 0% { opacity: 0; transform: scale(.86); } 100% { opacity: 1; transform: scale(1); } }
 .topPanel { max-width: 1180px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 125px; }
+.soundPanel { display: flex; gap: 6px; flex-wrap: wrap; }
+.soundButton { background: rgba(0,0,0,.72); color: #facc15; border: 1px solid rgba(250,204,21,.38); border-radius: 12px; padding: 9px 10px; font-size: 12px; font-weight: 1000; cursor: pointer; }
 .titleFrame { display: inline-flex; flex-direction: column; gap: 4px; padding: 10px 14px; border: 2px solid #facc15; border-radius: 16px; background: rgba(20,20,20,.86); box-shadow: 0 0 28px rgba(250,204,21,.18); }
 .miniText { color: #facc15; font-size: 12px; font-weight: 900; letter-spacing: 2px; }
 h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
@@ -722,7 +843,9 @@ h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
   .adActions { gap: 6px; }
   .adSite, .adClose { padding: 11px 8px; font-size: 13px; border-radius: 11px; }
   .prizeCorner { position: absolute; right: 6px; top: 6px; padding: 6px 9px; font-size: 11px; border-radius: 10px; }
-  .topPanel { margin: 34px 0 5px; gap: 6px; padding-right: 0; align-items: flex-start; }
+  .topPanel { margin: 34px 0 5px; gap: 6px; padding-right: 0; align-items: flex-start; flex-direction: column-reverse; }
+  .soundPanel { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .soundButton { padding: 8px 6px; font-size: 10.5px; border-radius: 10px; }
   .titleFrame { padding: 8px 10px; border-radius: 13px; }
   .miniText { font-size: 8px; letter-spacing: 1px; }
   h1 { font-size: 20px; line-height: .95; max-width: 230px; }
@@ -770,4 +893,3 @@ h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
   .bottomText { margin-top: 5px; font-size: 11px; }
 }
 `;
-
