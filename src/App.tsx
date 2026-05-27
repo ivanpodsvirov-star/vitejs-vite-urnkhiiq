@@ -1,13 +1,12 @@
 // @ts-nocheck
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const SAVE_KEY = "poklikai_admin_edc29_two_weeks_v5_telegram_mobile";
+const SAVE_KEY = "poklikai_admin_edc27_v6_mobile_moods_ads";
 const PLAYER_ID_KEY = "poklikai_admin_player_id_v1";
 
 const adminThoughts = [
   "остынь банан",
   "хочу дебаты",
-  "вот бы EDC27 так не грелся",
   "АРМИТЕК",
   "клик принят",
   "где мой пауэрбанк",
@@ -18,7 +17,7 @@ const adminThoughts = [
   "кто опять включил турбо",
   "не жми так яростно",
   "я все вижу из-под капюшона",
-  "шанс маленький, но живой",
+  "шанс растет, палец работает",
   "проверяй серийник, герой",
   "оптика решает, банан",
   "турбо не навсегда",
@@ -40,86 +39,73 @@ const adminThoughts = [
 const ads = [
   {
     title: "EDC35 для тех, кто любит мощнее",
-    text: "Плоский EDC-фонарь с серьезным светом. Нажал, посветил, понял.",
-    tag: "Реклама фонаря",
+    text: "Плоский EDC-фонарь с серьезным светом для города, машины и ежедневного набора.",
+    tag: "EDC-фонарь",
+    link: "https://nitecore.ru/catalog/fonari/edc35-/",
   },
   {
     title: "EDC09 всегда под рукой",
-    text: "Компактный фонарь на каждый день. Маленький, но не бесполезный.",
-    tag: "Карманный вариант",
+    text: "Компактный EDC-фонарь на каждый день. Удобно носить, быстро достать, легко использовать.",
+    tag: "Компактный EDC",
+    link: "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc09/",
   },
   {
     title: "EDC17 для ежедневного набора",
-    text: "Когда нужен нормальный свет, а не вспышка телефона на последнем проценте.",
-    tag: "EDC совет",
-  },
-  {
-    title: "Админ рекомендует EDC35",
-    text: "Света много, формат удобный, выглядит серьезно. Банан одобряет.",
-    tag: "Совет админа",
-  },
-  {
-    title: "EDC09 в карман и пошел",
-    text: "Для подъезда, гаража, машины, склада и внезапной темноты.",
-    tag: "Полезная пауза",
-  },
-  {
-    title: "EDC17 против темного угла",
-    text: "Тот случай, когда фонарь лучше иметь заранее, чем искать потом.",
-    tag: "Мини-реклама",
-  },
-  {
-    title: "Пока кликаешь, посмотри фонарь",
-    text: "У тебя уже есть монеты. Осталось выбрать нормальный EDC.",
-    tag: "Пауза между кликами",
-  },
-  {
-    title: "Не все фонари одинаковые",
-    text: "Один светит для галочки, другой реально помогает. Выбор очевиден.",
-    tag: "Фонарный факт",
-  },
-  {
-    title: "EDC35 выглядит как босс",
-    text: "Если фонарь должен быть не просто фонарем, а предметом силы.",
-    tag: "Мощный вариант",
-  },
-  {
-    title: "EDC09 без лишнего пафоса",
-    text: "Просто компактный фонарь, который удобно носить каждый день.",
-    tag: "Лаконично",
-  },
-  {
-    title: "EDC17 для тех, кто готов",
-    text: "Темнота приходит без предупреждения. Нормальный фонарь тоже нужен заранее.",
+    text: "Карманный фонарь для тех, кто любит быть готовым к темноте заранее.",
     tag: "На каждый день",
+    link: "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc17/",
   },
   {
-    title: "Свет нужен не только в походе",
-    text: "Дом, машина, работа, двор, склад. EDC-фонарь быстро становится привычкой.",
-    tag: "EDC мысль",
+    title: "TIP SE Black на ключи",
+    text: "Мини-фонарь, который удобно носить вместе с ключами. Маленький формат, быстрый доступ к свету.",
+    tag: "Наключный фонарь",
+    link: "https://nitecore.ru/catalog/fonari/tip-se-black/",
   },
   {
-    title: "Телефон не фонарь",
-    text: "Вспышка телефона пригодится, но нормальный EDC все равно удобнее.",
-    tag: "Жиза",
+    title: "TIKI Grey для кармана",
+    text: "Легкий наключный фонарь для подъезда, сумки, машины и мелких задач каждый день.",
+    tag: "Мини-свет",
+    link: "https://nitecore.ru/catalog/fonari/naklyuchnye-fonari/t-naklyuchnye-fonari/tiki-grey-/",
   },
   {
-    title: "Кликнул админа, посмотри фонарь",
-    text: "Реклама короткая, фонари нормальные, ссылки те же три.",
-    tag: "Быстрая реклама",
+    title: "TUP2 Orange заметен сразу",
+    text: "Яркий наключный фонарь в оранжевом корпусе. Удобный вариант, чтобы свет был всегда рядом.",
+    tag: "Яркий EDC",
+    link: "https://nitecore.ru/catalog/fonari/naklyuchnye-fonari/t-naklyuchnye-fonari/tup2-orange/",
   },
   {
-    title: "Твой будущий EDC где-то тут",
-    text: "EDC35, EDC09 или EDC17. Случайная ссылка решит за тебя.",
-    tag: "Рандом совет",
+    title: "EMR10 против комаров",
+    text: "Портативный электронный отпугиватель для отдыха, дачи, рыбалки и вечерних посиделок на улице.",
+    tag: "Для отдыха",
+    link: "https://nitecore.ru/catalog/tovary-dlya-turizma-i-otdykha-kemping/emr10-/",
+  },
+  {
+    title: "EMR30SE для летних выездов",
+    text: "Отпугиватель комаров и мошек для тех, кто хочет спокойно сидеть у палатки, машины или лагеря.",
+    tag: "Антикомар",
+    link: "https://nitecore.ru/catalog/tovary-dlya-turizma-i-otdykha-kemping/emr-portativnye-elektronnye-otpugivateli-ot-komarov-i-moshek/emr30se-/",
+  },
+  {
+    title: "CW10 для жары и палатки",
+    text: "Портативный вентилятор для кемпинга, рабочего места, поездки и жаркого летнего вечера.",
+    tag: "Портативный вентилятор",
+    link: "https://nitecore.ru/catalog/tovary-dlya-turizma-i-otdykha-kemping/cw10-/",
+  },
+  {
+    title: "CARBO 10000 для зарядки",
+    text: "Пауэрбанк для телефона, фонаря и другой техники, когда розетка далеко, а заряд нужен сейчас.",
+    tag: "Питание в дороге",
+    link: "https://nitecore.ru/catalog/istochniki-pitaniya/power-bank/carbo-10000-/",
+  },
+  {
+    title: "FSP30 для солнечной подзарядки",
+    text: "Солнечная панель для выездов, лагеря и ситуаций, когда хочется меньше зависеть от розетки.",
+    tag: "Солнечная панель",
+    link: "https://nitecore.ru/catalog/istochniki-pitaniya/fsp30-/",
   },
 ];
 
-const adLinks = [
-  "https://nitecore.ru/catalog/fonari/edc35-/",
-  "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc09/",
-  "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc17/",
-];
+const adLinks = ads.map((item) => item.link);
 
 const defaultGame = {
   coins: 0,
@@ -176,6 +162,10 @@ export default function App() {
   const [showRules, setShowRules] = useState(true);
   const [thought, setThought] = useState("");
   const [adPopup, setAdPopup] = useState(null);
+  const [adminHit, setAdminHit] = useState(false);
+  const [adminMood, setAdminMood] = useState("normal");
+  const [tapCount, setTapCount] = useState(0);
+  const adminTargetRef = useRef(null);
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -224,9 +214,7 @@ export default function App() {
   }
 
   function makeAdWithLink() {
-    const nextAd = ads[Math.floor(Math.random() * ads.length)];
-    const link = adLinks[Math.floor(Math.random() * adLinks.length)];
-    return { ...nextAd, link };
+    return ads[Math.floor(Math.random() * ads.length)];
   }
 
   function showRandomAd() {
@@ -265,9 +253,7 @@ export default function App() {
     const timer = setInterval(() => {
       setAdPopup((current) => {
         if (current) return current;
-        if (Math.random() > 0.76) {
-          return makeAdWithLink();
-        }
+        if (Math.random() > 0.76) return makeAdWithLink();
         return null;
       });
     }, 28000);
@@ -295,7 +281,7 @@ export default function App() {
     const id = Date.now() + Math.random();
     const item = {
       id,
-      top: Math.floor(80 + Math.random() * 190),
+      top: Math.floor(70 + Math.random() * 200),
       duration: 3.2 + Math.random() * 1.1,
       direction: Math.random() > 0.5 ? "left" : "right",
     };
@@ -316,10 +302,54 @@ export default function App() {
     if (roll <= manualChance) spawnGoldLight();
   }
 
+  function pressPlayArea(event) {
+    if (showRules || adPopup) return;
+
+    const target = adminTargetRef.current;
+    if (!target) return;
+
+    const rect = target.getBoundingClientRect();
+    const x = event.clientX;
+    const y = event.clientY;
+    const safeZone = 18;
+
+    const insideAdmin =
+      x >= rect.left - safeZone &&
+      x <= rect.right + safeZone &&
+      y >= rect.top - safeZone &&
+      y <= rect.bottom + safeZone;
+
+    if (!insideAdmin) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    clickAdmin();
+  }
+
   function clickAdmin() {
+    const nextTap = tapCount + 1;
+    setTapCount(nextTap);
+
+    if (nextTap % 10 === 0) {
+      setAdminHit(false);
+      setTimeout(() => {
+        setAdminHit(true);
+        setTimeout(() => setAdminHit(false), 280);
+      }, 0);
+    }
+
+    const commonMoods = ["happy", "angry", "surprised", "tired", "blink", "smirk", "dizzy"];
+    const rareMoods = ["evil", "steam", "lightning", "shock"];
+
+    if (nextTap % 5 === 0) {
+      const pool = nextTap % 25 === 0 || Math.random() > 0.86 ? rareMoods : commonMoods;
+      const nextMood = pool[Math.floor(Math.random() * pool.length)];
+      setAdminMood(nextMood);
+      setTimeout(() => setAdminMood("normal"), 1500);
+    }
+
     setGame((prev) => {
       const nextTotalClicks = prev.totalClicks + 1;
-
       setTimeout(() => rollManualChance(nextTotalClicks), 0);
 
       return {
@@ -352,17 +382,6 @@ export default function App() {
     }));
 
     addFloatingText("шанс +");
-  }
-
-  function resetGame() {
-    const ok = confirm("Точно сбросить игру?");
-    if (!ok) return;
-    setGame(applyHourlyVisitBonus(defaultGame));
-    setGoldLight(null);
-    setWinMessage(false);
-    setThought("");
-    setAdPopup(null);
-    setShowRules(true);
   }
 
   return (
@@ -404,7 +423,7 @@ export default function App() {
       )}
 
       <div className="topPanel">
-        <div>
+        <div className="titleFrame">
           <div className="miniText">NITECORE</div>
           <h1>Кликни админа</h1>
         </div>
@@ -416,14 +435,18 @@ export default function App() {
       </div>
 
       <div className="mainArea">
-        <div className="clickZone">
+        <div className="clickZone" onPointerDown={pressPlayArea}>
           <div className="simpleBack" />
 
           {goldLight && (
             <button
               className={"goldLight " + goldLight.direction}
               style={{ top: goldLight.top, animationDuration: goldLight.duration + "s" }}
-              onClick={catchGoldLight}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                catchGoldLight();
+              }}
               aria-label="Поймать золотой фонарь"
             >
               <div className="goldBeam" />
@@ -448,7 +471,11 @@ export default function App() {
               <div key={item.id} className="floating" style={{ marginLeft: item.x }}>{item.text}</div>
             ))}
 
-            <button className="adminButton" onClick={clickAdmin} aria-label="Кликнуть админа">
+            <div
+              ref={adminTargetRef}
+              className={"adminButton " + (adminHit ? "hit" : "")}
+              aria-hidden="true"
+            >
               <div className="adminFigure">
                 <div className="adminGlow" />
                 <div className="adminBody" />
@@ -456,13 +483,33 @@ export default function App() {
                 <div className="adminShoulder right" />
                 <div className="adminHoodOuter" />
                 <div className="adminHoodRim" />
-                <div className="adminFaceShadow" />
+                <div className={"adminFaceShadow " + adminMood}>
+                  {(adminMood === "steam" || adminMood === "angry" || adminMood === "evil") && (
+                    <div className="steamWrap">
+                      <span className="steam s1" />
+                      <span className="steam s2" />
+                      <span className="steam s3" />
+                    </div>
+                  )}
+
+                  {(adminMood === "lightning" || adminMood === "shock") && (
+                    <div className="lightningWrap">
+                      <span className="lightningBolt left" />
+                      <span className="lightningBolt right" />
+                    </div>
+                  )}
+
+                  <div className="faceEyes">
+                    <span className="eye left" />
+                    <span className="eye right" />
+                  </div>
+                  <div className="faceMouth" />
+                </div>
                 <div className="adminNeckShadow" />
-                <div className="adminZipper" />
                 <div className="adminPocket" />
                 <div className="adminLogo">NITECORE</div>
               </div>
-            </button>
+            </div>
           </div>
         </div>
 
@@ -504,9 +551,12 @@ function Stat({ title, value }) {
 }
 
 const styles = `
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-touch-callout: none; }
 html, body, #root { min-height: 100%; }
 body { margin: 0; background: #080808; overflow-x: hidden; }
+button, a, .adminButton, .adminButton * { -webkit-tap-highlight-color: rgba(0,0,0,0) !important; outline: none !important; user-select: none !important; -webkit-user-select: none !important; -webkit-touch-callout: none !important; -webkit-user-drag: none !important; }
+button:focus, button:focus-visible, a:focus, a:focus-visible, .adminButton:focus, .adminButton:focus-visible { outline: none !important; box-shadow: none !important; background-color: transparent !important; }
+.adminButton::selection, .adminButton *::selection { background: transparent; color: inherit; }
 .game {
   min-height: 100svh;
   color: white;
@@ -548,19 +598,21 @@ body { margin: 0; background: #080808; overflow-x: hidden; }
 .adClose { background: #181818; color: #facc15; border: 1px solid rgba(250,204,21,.35); }
 @keyframes adPop { 0% { opacity: 0; transform: scale(.86); } 100% { opacity: 1; transform: scale(1); } }
 .topPanel { max-width: 1180px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 125px; }
+.titleFrame { display: inline-flex; flex-direction: column; gap: 4px; padding: 10px 14px; border: 2px solid #facc15; border-radius: 16px; background: rgba(20,20,20,.86); box-shadow: 0 0 28px rgba(250,204,21,.18); }
 .miniText { color: #facc15; font-size: 12px; font-weight: 900; letter-spacing: 2px; }
 h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
-.smallButton { background: #222; color: white; border: 1px solid #444; border-radius: 13px; padding: 10px 16px; font-weight: 900; cursor: pointer; }
 .statsGrid { max-width: 1180px; margin: 0 auto 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .statCard { background: rgba(0,0,0,.64); border: 1px solid #333; border-radius: 16px; padding: 12px; }
 .statCard span { display: block; color: #aaa; font-size: 12px; margin-bottom: 5px; }
 .statCard b { color: #facc15; font-size: 25px; }
 .mainArea { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 1fr 390px; gap: 12px; }
-.clickZone { min-height: 580px; position: relative; overflow: hidden; border: 1px solid #333; border-radius: 24px; background: #0d0d0d; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+.clickZone { min-height: 580px; position: relative; overflow: hidden; border: 1px solid #333; border-radius: 24px; background: #0d0d0d; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; -webkit-tap-highlight-color: rgba(0,0,0,0) !important; touch-action: manipulation; }
 .simpleBack { position: absolute; inset: 0; background: radial-gradient(circle at 50% 42%, rgba(250,204,21,.12), transparent 38%), linear-gradient(180deg, #1b1b1b, #070707); pointer-events: none; }
 .adminWrap { position: relative; z-index: 3; width: 320px; height: 420px; display: flex; align-items: center; justify-content: center; }
-.adminButton { width: 310px; height: 410px; border: 0; background: transparent; cursor: pointer; transition: transform .08s ease; }
+.adminButton { width: 310px; height: 410px; border: 0; background: transparent !important; cursor: pointer; transition: transform .08s ease; padding: 0; outline: none !important; -webkit-tap-highlight-color: rgba(0,0,0,0) !important; user-select: none !important; -webkit-user-select: none !important; -webkit-touch-callout: none !important; -webkit-user-drag: none !important; -webkit-appearance: none; appearance: none; display: block; touch-action: none; caret-color: transparent; pointer-events: none; }
 .adminButton:active { transform: scale(.96); }
+.adminButton.hit .adminFigure { animation: adminTap .26s ease; }
+@keyframes adminTap { 0% { transform: scale(1) rotate(0deg); } 25% { transform: scale(.91) rotate(-2deg); } 55% { transform: scale(1.06) rotate(2deg); } 100% { transform: scale(1) rotate(0deg); } }
 .adminFigure { width: 100%; height: 100%; position: relative; filter: drop-shadow(0 28px 65px rgba(0,0,0,.9)); }
 .adminGlow { position: absolute; left: 50%; top: 43%; width: 320px; height: 320px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(250,204,21,.14), transparent 64%); filter: blur(10px); }
 .adminBody { position: absolute; left: 50%; bottom: 12px; width: 252px; height: 286px; transform: translateX(-50%); background: radial-gradient(circle at 45% 18%, rgba(255,255,255,.075), transparent 28%), linear-gradient(180deg, #1d1d1d, #070707); border-radius: 44px 44px 25px 25px; z-index: 1; box-shadow: inset -25px 0 35px rgba(0,0,0,.6); }
@@ -569,17 +621,57 @@ h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
 .adminShoulder.right { right: 17px; transform: rotate(-11deg); }
 .adminHoodOuter { position: absolute; top: 2px; left: 50%; width: 215px; height: 228px; transform: translateX(-50%); background: radial-gradient(circle at 45% 20%, rgba(255,255,255,.08), transparent 24%), linear-gradient(180deg, #2a2a2a, #050505); border-radius: 50% 50% 44% 44%; z-index: 5; }
 .adminHoodRim { position: absolute; top: 45px; left: 50%; width: 170px; height: 182px; transform: translateX(-50%); background: linear-gradient(180deg, #080808, #000); border-radius: 48% 48% 50% 50%; z-index: 6; box-shadow: 0 0 0 12px rgba(20,20,20,.75), inset 0 0 35px #000; }
-.adminFaceShadow { position: absolute; top: 80px; left: 50%; width: 130px; height: 110px; transform: translateX(-50%); background: #000; border-radius: 45% 45% 52% 52%; z-index: 7; }
+.adminFaceShadow { position: absolute; top: 80px; left: 50%; width: 130px; height: 110px; transform: translateX(-50%); background: #000; border-radius: 45% 45% 52% 52%; z-index: 7; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: visible; }
+.faceEyes { display: flex; justify-content: center; gap: 22px; margin-bottom: 14px; z-index: 3; }
+.eye { display: block; width: 12px; height: 12px; border-radius: 50%; background: #facc15; box-shadow: 0 0 10px rgba(250,204,21,.65); transition: all .18s ease; }
+.faceMouth { width: 26px; height: 10px; border-bottom: 3px solid #facc15; border-radius: 0 0 18px 18px; transition: all .18s ease; z-index: 3; }
+.adminFaceShadow.normal .eye { width: 12px; height: 12px; border-radius: 50%; }
+.adminFaceShadow.normal .faceMouth { width: 24px; height: 10px; border-bottom: 3px solid #facc15; border-radius: 0 0 18px 18px; }
+.adminFaceShadow.happy .eye { width: 12px; height: 6px; border-radius: 0 0 10px 10px; }
+.adminFaceShadow.happy .faceMouth { width: 34px; height: 14px; border-bottom: 4px solid #facc15; border-radius: 0 0 24px 24px; }
+.adminFaceShadow.angry .eye.left { transform: rotate(18deg); height: 4px; border-radius: 10px; }
+.adminFaceShadow.angry .eye.right { transform: rotate(-18deg); height: 4px; border-radius: 10px; }
+.adminFaceShadow.angry .faceMouth { width: 22px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; }
+.adminFaceShadow.evil .eye.left { transform: rotate(22deg); width: 14px; height: 4px; border-radius: 10px; box-shadow: 0 0 14px rgba(250,204,21,.9); }
+.adminFaceShadow.evil .eye.right { transform: rotate(-22deg); width: 14px; height: 4px; border-radius: 10px; box-shadow: 0 0 14px rgba(250,204,21,.9); }
+.adminFaceShadow.evil .faceMouth { width: 28px; height: 8px; border-bottom: 3px solid #facc15; border-radius: 0 0 18px 6px; transform: rotate(-6deg); }
+.adminFaceShadow.surprised .eye { width: 14px; height: 14px; }
+.adminFaceShadow.surprised .faceMouth { width: 12px; height: 12px; border: 3px solid #facc15; border-radius: 50%; }
+.adminFaceShadow.tired .eye { height: 3px; border-radius: 10px; opacity: .9; }
+.adminFaceShadow.tired .faceMouth { width: 18px; height: 0; border-bottom: 2px solid #facc15; border-radius: 0; opacity: .8; }
+.adminFaceShadow.blink .eye { height: 3px; border-radius: 10px; }
+.adminFaceShadow.blink .faceMouth { width: 24px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; }
+.adminFaceShadow.smirk .eye.left { width: 11px; height: 11px; }
+.adminFaceShadow.smirk .eye.right { width: 11px; height: 5px; border-radius: 10px; }
+.adminFaceShadow.smirk .faceMouth { width: 28px; height: 10px; border-bottom: 3px solid #facc15; border-radius: 0 0 20px 8px; transform: rotate(8deg); }
+.adminFaceShadow.steam .eye.left { transform: rotate(16deg); height: 4px; border-radius: 10px; }
+.adminFaceShadow.steam .eye.right { transform: rotate(-16deg); height: 4px; border-radius: 10px; }
+.adminFaceShadow.steam .faceMouth { width: 24px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; }
+.adminFaceShadow.lightning .eye, .adminFaceShadow.shock .eye { width: 14px; height: 14px; box-shadow: 0 0 18px rgba(250,204,21,1); }
+.adminFaceShadow.lightning .faceMouth { width: 18px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; }
+.adminFaceShadow.shock .faceMouth { width: 14px; height: 14px; border: 3px solid #facc15; border-radius: 50%; }
+.adminFaceShadow.dizzy .eye.left, .adminFaceShadow.dizzy .eye.right { background: transparent; width: 14px; height: 14px; border: 2px solid #facc15; border-radius: 50%; box-shadow: 0 0 10px rgba(250,204,21,.65); }
+.adminFaceShadow.dizzy .eye.left:after, .adminFaceShadow.dizzy .eye.right:after { content: ""; display: block; width: 6px; height: 6px; margin: 2px; background: #facc15; border-radius: 50%; }
+.adminFaceShadow.dizzy .faceMouth { width: 26px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; transform: rotate(5deg); }
+.steamWrap { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.steam { position: absolute; bottom: 72px; width: 14px; height: 26px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.7), rgba(255,255,255,0)); filter: blur(2px); opacity: 0; animation: steamRise 1s ease-out infinite; }
+.steam.s1 { left: 20px; animation-delay: 0s; }
+.steam.s2 { left: 52px; animation-delay: .25s; }
+.steam.s3 { right: 20px; animation-delay: .5s; }
+@keyframes steamRise { 0% { transform: translateY(0) scale(.8); opacity: 0; } 20% { opacity: .7; } 100% { transform: translateY(-28px) scale(1.3); opacity: 0; } }
+.lightningWrap { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.lightningBolt { position: absolute; top: 8px; width: 18px; height: 42px; background: #facc15; clip-path: polygon(45% 0%, 100% 0%, 63% 38%, 100% 38%, 35% 100%, 52% 57%, 15% 57%); filter: drop-shadow(0 0 10px rgba(250,204,21,.85)); animation: boltFlash .35s ease-in-out infinite alternate; }
+.lightningBolt.left { left: -10px; transform: rotate(-12deg); }
+.lightningBolt.right { right: -10px; transform: rotate(12deg); }
+@keyframes boltFlash { 0% { opacity: .45; } 100% { opacity: 1; } }
 .adminNeckShadow { position: absolute; left: 50%; top: 177px; width: 90px; height: 65px; transform: translateX(-50%); background: #050505; border-radius: 0 0 35px 35px; z-index: 4; }
 .adminLogo { position: absolute; bottom: 135px; left: 50%; transform: translateX(-50%); color: #facc15; font-size: 27px; font-weight: 1000; letter-spacing: 4px; z-index: 8; }
-.adminZipper { position: absolute; left: 50%; top: 210px; width: 3px; height: 172px; transform: translateX(-50%); background: #555; z-index: 8; opacity: .65; }
 .adminPocket { position: absolute; bottom: 42px; left: 50%; width: 160px; height: 66px; transform: translateX(-50%); border: 2px solid rgba(255,255,255,.055); border-top: 0; border-radius: 0 0 20px 20px; z-index: 8; }
 .thoughtBubble { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); max-width: 235px; background: #fff8dc; color: #111; padding: 10px 12px; border-radius: 16px; font-size: 13px; font-weight: 900; line-height: 1.2; text-align: center; z-index: 35; box-shadow: 0 8px 25px rgba(0,0,0,.35); animation: bubblePop .18s ease; }
 .thoughtBubble:after { content: ""; position: absolute; bottom: -8px; left: 50%; width: 16px; height: 16px; background: #fff8dc; transform: translateX(-50%) rotate(45deg); }
 @keyframes bubblePop { 0% { opacity: 0; transform: translateX(-50%) scale(.86); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
 .floating { position: absolute; top: 58px; left: 50%; z-index: 25; color: #facc15; font-size: 31px; font-weight: 1000; pointer-events: none; animation: floatUp .65s ease forwards; text-shadow: 0 3px 0 #000; }
 @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, 20px) scale(.8); } 100% { opacity: 0; transform: translate(-50%, -70px) scale(1.18); } }
-.bigClickButton { position: relative; z-index: 4; width: min(90%, 380px); padding: 16px; border: 0; border-radius: 16px; background: linear-gradient(180deg, #facc15, #eab308); color: #111; font-size: 22px; font-weight: 1000; cursor: pointer; box-shadow: 0 0 34px rgba(250,204,21,.32); }
 .goldLight { position: absolute; left: -100px; z-index: 20; width: 82px; height: 82px; border: 0; background: transparent; padding: 0; cursor: pointer; animation-name: flyRight; animation-timing-function: linear; animation-fill-mode: forwards; filter: drop-shadow(0 0 24px rgba(250,204,21,.75)); }
 .goldLight.left { left: auto; right: -100px; animation-name: flyLeft; }
 .goldBody { position: absolute; left: 14%; top: 38%; width: 62%; height: 27%; border-radius: 999px; background: linear-gradient(90deg, #7c4a00, #facc15, #fff2a8); box-shadow: inset 0 0 8px rgba(255,255,255,.45); }
@@ -604,7 +696,6 @@ h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
 .lastWin b { display: block; color: #facc15; }
 .upgradeButton { width: 100%; background: #facc15; color: #111; border: 0; border-radius: 14px; padding: 14px; font-weight: 1000; cursor: pointer; }
 .upgradeButton:disabled { opacity: .45; cursor: not-allowed; }
-.smallInfo { color: #aaa; font-size: 12px; line-height: 1.35; background: rgba(250,204,21,.08); border: 1px solid rgba(250,204,21,.18); border-radius: 12px; padding: 10px; }
 .bottomText { max-width: 1180px; margin: 10px auto 0; color: #aaa; text-align: center; font-size: 13px; }
 .bottomText b { color: #facc15; }
 @media (max-width: 900px) {
@@ -613,87 +704,34 @@ h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
   .sidePanel { min-height: auto; }
   .topPanel { padding-right: 0; margin-top: 42px; }
 }
-
 @media (max-width: 600px) {
   html, body, #root { min-height: 100dvh; }
   body { overflow-x: hidden; touch-action: manipulation; }
-  .game {
-    min-height: 100dvh;
-    width: 100%;
-    max-width: 430px;
-    margin: 0 auto;
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-  }
-
+  .game { min-height: 100dvh; width: 100%; max-width: 430px; margin: 0 auto; padding: 6px; display: flex; flex-direction: column; overflow-x: hidden; }
   .rulesOverlay { padding: 8px; align-items: center; overflow: auto; }
-  .rulesModal {
-    width: 100%;
-    max-height: calc(100dvh - 16px);
-    overflow: auto;
-    padding: 14px;
-    border-radius: 16px;
-  }
+  .rulesModal { width: 100%; max-height: calc(100dvh - 16px); overflow: auto; padding: 14px; border-radius: 16px; }
   .rulesBadge { font-size: 10px; padding: 5px 8px; margin-bottom: 7px; }
   .rulesModal h2 { font-size: 20px; margin-bottom: 7px; }
   .rulesModal p { font-size: 12px; margin-bottom: 9px; }
   .rulesList { font-size: 11px; gap: 6px; padding: 9px; border-radius: 12px; }
   .rulesButton { padding: 11px; border-radius: 12px; font-size: 13px; }
-
   .adOverlay { padding: 8px; }
   .adModal { width: 96vw; max-width: 360px; padding: 14px; border-radius: 16px; }
   .adModal h2 { font-size: 20px; }
   .adModal p { font-size: 12px; }
   .adActions { gap: 6px; }
   .adSite, .adClose { padding: 11px 8px; font-size: 13px; border-radius: 11px; }
-
-  .prizeCorner {
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    padding: 6px 9px;
-    font-size: 11px;
-    border-radius: 10px;
-  }
-
-  .topPanel {
-    margin: 34px 0 5px;
-    gap: 6px;
-    padding-right: 0;
-    align-items: flex-start;
-  }
+  .prizeCorner { position: absolute; right: 6px; top: 6px; padding: 6px 9px; font-size: 11px; border-radius: 10px; }
+  .topPanel { margin: 34px 0 5px; gap: 6px; padding-right: 0; align-items: flex-start; }
+  .titleFrame { padding: 8px 10px; border-radius: 13px; }
   .miniText { font-size: 8px; letter-spacing: 1px; }
   h1 { font-size: 20px; line-height: .95; max-width: 230px; }
-
-  .statsGrid {
-    width: 100%;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 5px;
-    margin: 0 0 6px;
-  }
+  .statsGrid { width: 100%; grid-template-columns: repeat(2, 1fr); gap: 5px; margin: 0 0 6px; }
   .statCard { padding: 7px 5px; border-radius: 11px; min-width: 0; }
   .statCard span { font-size: 9px; margin-bottom: 2px; white-space: nowrap; }
   .statCard b { font-size: 14px; }
-
-  .mainArea {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-    min-height: 0;
-  }
-  .clickZone {
-    min-height: 350px;
-    height: 53dvh;
-    max-height: 440px;
-    border-radius: 17px;
-    gap: 0;
-    flex-shrink: 0;
-  }
-
+  .mainArea { width: 100%; display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; }
+  .clickZone { min-height: 350px; height: 53dvh; max-height: 440px; border-radius: 17px; gap: 0; flex-shrink: 0; }
   .adminWrap { width: 232px; height: 292px; margin-top: -4px; }
   .adminButton { width: 224px; height: 292px; }
   .adminGlow { width: 228px; height: 228px; }
@@ -704,43 +742,32 @@ h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
   .adminHoodOuter { top: 1px; width: 146px; height: 156px; }
   .adminHoodRim { top: 30px; width: 116px; height: 126px; box-shadow: 0 0 0 8px rgba(20,20,20,.75), inset 0 0 24px #000; }
   .adminFaceShadow { top: 54px; width: 88px; height: 76px; }
+  .faceEyes { gap: 14px; margin-bottom: 9px; }
+  .eye { width: 8px; height: 8px; }
+  .faceMouth { width: 18px; height: 7px; border-bottom-width: 2px; }
+  .adminFaceShadow.happy .faceMouth { width: 24px; height: 10px; border-bottom-width: 3px; }
+  .adminFaceShadow.surprised .faceMouth, .adminFaceShadow.shock .faceMouth { width: 10px; height: 10px; border-width: 2px; }
+  .lightningBolt { width: 12px; height: 28px; }
+  .steam { width: 10px; height: 18px; bottom: 50px; }
+  .steam.s1 { left: 13px; }
+  .steam.s2 { left: 38px; }
+  .steam.s3 { right: 13px; }
   .adminNeckShadow { top: 121px; width: 60px; height: 44px; }
   .adminLogo { bottom: 92px; font-size: 18px; letter-spacing: 2px; }
-  .adminZipper { top: 145px; height: 118px; }
   .adminPocket { bottom: 28px; width: 112px; height: 44px; }
-
-  .thoughtBubble {
-    max-width: 182px;
-    font-size: 10.5px;
-    padding: 7px 9px;
-    top: -2px;
-    border-radius: 12px;
-  }
+  .thoughtBubble { max-width: 182px; font-size: 10.5px; padding: 7px 9px; top: -2px; border-radius: 12px; }
   .floating { top: 36px; font-size: 20px; }
-
   .goldLight { width: 60px; height: 60px; }
   .goldLight span { font-size: 10px; top: -11px; }
   .winBox { width: 92%; padding: 14px 10px; border-radius: 15px; }
   .winBox b { font-size: 17px; }
   .winBox span { font-size: 12px; }
   .winBox strong { font-size: 15px; }
-
-  .sidePanel {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    border-radius: 0;
-    min-height: auto;
-    gap: 6px;
-  }
+  .sidePanel { padding: 0; border: 0; background: transparent; border-radius: 0; min-height: auto; gap: 6px; }
   .infoCard { display: none; }
   .lastWin { padding: 8px; border-radius: 11px; font-size: 11px; }
-  .upgradeButton {
-    padding: 11px;
-    border-radius: 12px;
-    font-size: 12px;
-    box-shadow: 0 0 24px rgba(250,204,21,.18);
-  }
+  .upgradeButton { padding: 11px; border-radius: 12px; font-size: 12px; box-shadow: 0 0 24px rgba(250,204,21,.18); }
   .bottomText { margin-top: 5px; font-size: 11px; }
 }
 `;
+
