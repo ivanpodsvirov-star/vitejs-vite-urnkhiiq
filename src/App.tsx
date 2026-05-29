@@ -1,15 +1,17 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const SAVE_KEY = "poklikai_admin_edc27_v10_chance_each_click";
+const SAVE_KEY = "poklikai_admin_edc27_v11_roulette_1000";
 const PLAYER_ID_KEY = "poklikai_admin_player_id_v1";
 
-const BASE_CHANCE = 0.36;
+const BASE_CHANCE = 0.1;
 const UPGRADE_CHANCE = 0.05;
 const HOURLY_BONUS_CHANCE = 0.01;
 const MAX_CHANCE = 1.5;
 const START_UPGRADE_COST = 350;
 const COST_GROWTH = 1.3;
+
+const ROULETTE_SYMBOLS = ["🔦", "⚡", "🔋", "💡", "⭐"];
 
 const ADMIN_LINES = [
   "клик принят",
@@ -23,16 +25,30 @@ const ADMIN_LINES = [
 ];
 
 const FORTUNES = [
-  "Фонарь нужен за минуту до темноты.",
-  "Хороший EDC всегда с собой.",
-  "Проверь заряд заранее.",
-  "Маленький фонарь решает большие проблемы.",
-  "Турбо красиво, но экономный режим умнее.",
-  "Фонарь в машине однажды выручит.",
-  "Налобник освобождает руки.",
-  "IP68 радует, когда начинается дождь.",
-  "Запасной аккумулятор не бывает лишним.",
-  "Свет должен быть вовремя.",
+  "Скоро тебе повезет, но палец еще должен поработать.",
+  "В ближайшей темноте тебе понадобится надежный свет.",
+  "Следующий удачный клик может быть ближе, чем кажется.",
+  "Сегодня шанс улыбается тем, кто не сдается.",
+  "Твой будущий EDC уже где-то рядом.",
+  "Скоро один маленький луч решит большую проблему.",
+  "Впереди темный участок, но ты будешь готов.",
+  "Фонарь появится тогда, когда ты меньше всего ждешь.",
+  "Будущий победитель обычно делает еще один клик.",
+  "Свет уже ищет тебя. Осталось не пропустить момент.",
+  "Через несколько кликов ты можешь пожалеть, что остановился.",
+  "Темнота впереди, но у тебя будет преимущество.",
+  "Сегодня случайность работает не против тебя.",
+  "Золотой фонарь любит терпеливых.",
+  "Скоро экран может показать то, ради чего ты здесь.",
+  "Каждый клик приближает момент, который нельзя пропустить.",
+  "В будущем тебя ждет яркая находка.",
+  "Не все удачные клики выглядят важными сразу.",
+  "Админ делает вид, что ничего не знает, но он что-то знает.",
+  "Свет появится внезапно. Будь готов.",
+  "Удача не шумит заранее.",
+  "Твой приз может быть ближе, чем кажется.",
+  "Сегодня лучше сделать еще один клик.",
+  "Будущий победитель не закрывает игру слишком рано.",
 ];
 
 const ADS = [
@@ -72,6 +88,8 @@ const defaultGame = {
   lastHourlyVisit: 0,
   wins: 0,
   lastWinAt: 0,
+  rouletteDone: false,
+  rouletteWin: false,
 };
 
 const rnd = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
@@ -90,6 +108,7 @@ const chance = (g: any) =>
   );
 
 const cost = (lvl: number) => Math.floor(START_UPGRADE_COST * Math.pow(COST_GROWTH, lvl));
+
 const makeId = () => window.crypto?.randomUUID?.() || "guest_" + Date.now();
 
 function withHourlyBonus(g: any) {
@@ -132,6 +151,7 @@ export default function App() {
   const [music, setMusic] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
   const [achToast, setAchToast] = useState<any>(null);
+  const [roulette, setRoulette] = useState<any>(null);
 
   const adminRef = useRef<any>(null);
   const audioRef = useRef<any>(null);
@@ -236,18 +256,68 @@ export default function App() {
     setTimeout(() => setThought(""), 2200);
   }
 
+  function loserSlots() {
+    let slots = [rnd(ROULETTE_SYMBOLS), rnd(ROULETTE_SYMBOLS), rnd(ROULETTE_SYMBOLS)];
+
+    while (slots[0] === slots[1] && slots[1] === slots[2]) {
+      slots = [rnd(ROULETTE_SYMBOLS), rnd(ROULETTE_SYMBOLS), rnd(ROULETTE_SYMBOLS)];
+    }
+
+    return slots;
+  }
+
+  function startRoulette() {
+    if (roulette?.active) return;
+
+    const isWin = Math.random() < 0.35;
+
+    setRoulette({
+      active: true,
+      spinning: true,
+      slots: ["?", "?", "?"],
+      win: false,
+    });
+
+    beep(320, 0.08, 0.03, "square");
+    setTimeout(() => beep(420, 0.08, 0.03, "square"), 160);
+    setTimeout(() => beep(520, 0.08, 0.03, "square"), 320);
+
+    setTimeout(() => {
+      const result = isWin ? ["🔦", "🔦", "🔦"] : loserSlots();
+
+      setRoulette({
+        active: true,
+        spinning: false,
+        slots: result,
+        win: isWin,
+      });
+
+      setGame((g) => ({
+        ...g,
+        rouletteWin: isWin,
+      }));
+
+      if (isWin) {
+        beep(680, 0.1, 0.04, "triangle");
+        setTimeout(() => beep(880, 0.12, 0.04, "triangle"), 100);
+      } else {
+        beep(220, 0.16, 0.025, "sawtooth");
+      }
+    }, 3300);
+  }
+
   useEffect(() => {
     if (rules) return;
 
     const t = setInterval(() => {
       setAd((old: any) => {
-        if (old || gold || cookie || fortune) return old;
+        if (old || gold || cookie || fortune || roulette?.active) return old;
         return rnd(ADS);
       });
     }, 60000);
 
     return () => clearInterval(t);
-  }, [rules, gold, cookie, fortune]);
+  }, [rules, gold, cookie, fortune, roulette]);
 
   function openAd() {
     const link = ad?.[3] || ADS[0][3];
@@ -270,7 +340,7 @@ export default function App() {
   }
 
   function spawnGold() {
-    if (gold || ad || rules || cookie || fortune) return;
+    if (gold || ad || rules || cookie || fortune || roulette?.active) return;
 
     const id = Date.now() + Math.random();
 
@@ -286,7 +356,7 @@ export default function App() {
   }
 
   function spawnCookie() {
-    if (cookie || fortune || ad || rules || gold) return;
+    if (cookie || fortune || ad || rules || gold || roulette?.active) return;
 
     const id = Date.now() + Math.random();
 
@@ -351,8 +421,13 @@ export default function App() {
 
     setGame((g) => {
       const n = g.totalClicks + 1;
+      const launchRoulette = n === 1000 && !g.rouletteDone;
 
-      if (Math.random() * 100 <= chance(g)) {
+      if (launchRoulette) {
+        setTimeout(startRoulette, 0);
+      }
+
+      if (!launchRoulette && Math.random() * 100 <= chance(g)) {
         setTimeout(spawnGold, 0);
       }
 
@@ -370,7 +445,7 @@ export default function App() {
         setTimeout(() => setMood("normal"), 1500);
       }
 
-      if (n % 100 === 0) {
+      if (n % 100 === 0 && !launchRoulette) {
         setTimeout(spawnCookie, 0);
       }
 
@@ -387,6 +462,7 @@ export default function App() {
         ...g,
         coins: g.coins + 1,
         totalClicks: n,
+        rouletteDone: launchRoulette ? true : g.rouletteDone,
       };
     });
 
@@ -394,7 +470,7 @@ export default function App() {
   }
 
   function pressArea(e: any) {
-    if (rules || ad || fortune) return;
+    if (rules || ad || fortune || roulette?.active) return;
 
     const r = adminRef.current?.getBoundingClientRect();
     if (!r) return;
@@ -424,7 +500,7 @@ export default function App() {
       chanceLevel: g.chanceLevel + 1,
     }));
 
-    addFloat("шанс +0,05%");
+    addFloat("удача +");
   }
 
   return (
@@ -458,7 +534,7 @@ export default function App() {
 
             <div className="rulesList">
               <div><b>1.</b> Кликайте по админу и копите монеты.</div>
-              <div><b>2.</b> Улучшайте шанс появления золотого фонаря.</div>
+              <div><b>2.</b> Улучшайте удачу.</div>
               <div><b>3.</b> Когда появится золотой фонарь, нажмите на него.</div>
               <div><b>4.</b> Сделайте скриншот победы и отправьте его в комментарии.</div>
             </div>
@@ -479,6 +555,50 @@ export default function App() {
               <button onClick={openAd}>На сайт</button>
               <button className="ghost" onClick={() => setAd(null)}>Закрыть</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {roulette?.active && (
+        <div className="overlay rouletteO">
+          <div className="modal rouletteM">
+            <div className="badge">Рулетка на 1000 клике</div>
+            <h2>{roulette.spinning ? "Крутим рулетку" : roulette.win ? "Выпало три фонаря!" : "Не в этот раз"}</h2>
+
+            <div className="slots">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className={"slot " + (roulette.spinning ? "spinning" : "")}>
+                  {roulette.spinning ? (
+                    <div className="reel">
+                      <span>🔦</span>
+                      <span>⚡</span>
+                      <span>🔋</span>
+                      <span>💡</span>
+                      <span>⭐</span>
+                      <span>🔦</span>
+                    </div>
+                  ) : (
+                    <span>{roulette.slots[i]}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {roulette.spinning ? (
+              <p>Если выпадет три фонаря, откроется промокод на скидку 20%.</p>
+            ) : roulette.win ? (
+              <div className="promoBox">
+                <span>Промокод 20%:</span>
+                <b>NITECORE20</b>
+                <small>Сделай скриншот, чтобы не потерять.</small>
+              </div>
+            ) : (
+              <p>Рулетка была только на 1000 клике. Повторного запуска не будет.</p>
+            )}
+
+            {!roulette.spinning && (
+              <button onClick={() => setRoulette(null)}>Закрыть</button>
+            )}
           </div>
         </div>
       )}
@@ -603,9 +723,16 @@ export default function App() {
 
           <button className="upgrade" disabled={game.coins < upCost || curChance >= MAX_CHANCE} onClick={upgrade}>
             {curChance >= MAX_CHANCE
-              ? "Максимальный шанс"
-              : "Шанс " + curChance.toFixed(2) + "% - улучшить за " + num(upCost)}
+              ? "Максимальный уровень"
+              : "Улучшить удачу за " + num(upCost) + " монет"}
           </button>
+
+          {game.rouletteDone && (
+            <div className="info">
+              <span>Рулетка на 1000 клике</span>
+              <b>{game.rouletteWin ? "Промокод 20% открыт" : "Попытка использована"}</b>
+            </div>
+          )}
 
           {game.wins > 0 && (
             <div className="info">
@@ -667,7 +794,7 @@ const css = [
   ".game{min-height:100svh;color:white;padding:14px;font-family:Arial,sans-serif;background:radial-gradient(circle at 50% 10%,rgba(250,204,21,.18),transparent 24%),linear-gradient(135deg,#070707,#171717 48%,#050505);position:relative}.prize{position:fixed;right:12px;top:12px;z-index:50;background:rgba(0,0,0,.76);border:1px solid rgba(250,204,21,.45);color:#facc15;padding:9px 12px;border-radius:14px;font-size:14px;font-weight:900}",
   ".overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px}.adO{z-index:90;background:rgba(0,0,0,.5)}.modal{width:min(94vw,520px);background:linear-gradient(180deg,#181818,#080808);border:1px solid rgba(250,204,21,.42);border-radius:24px;padding:22px;box-shadow:0 0 70px rgba(250,204,21,.18),0 30px 90px rgba(0,0,0,.75)}.adM{width:min(92vw,380px);text-align:center}.badge{display:inline-flex;background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:1000;margin-bottom:10px}.dark{color:#111;background:#facc15}.modal h2{margin:0 0 10px;font-size:28px;color:#facc15}.modal p{color:#ddd;line-height:1.35;margin:0 0 14px}.modal button,.upgrade,.achBtn,.adBtns button{width:100%;background:#facc15;color:#111;border:0;border-radius:14px;padding:14px;font-weight:1000;cursor:pointer}.adBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.adBtns .ghost{background:#181818;color:#facc15;border:1px solid rgba(250,204,21,.35)}",
   ".top{max-width:1180px;margin:0 auto 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-right:125px}.sound{display:flex;gap:6px;flex-wrap:wrap}.sound button{background:rgba(0,0,0,.72);color:#facc15;border:1px solid rgba(250,204,21,.38);border-radius:12px;padding:9px 10px;font-size:12px;font-weight:1000}.title{display:inline-flex;flex-direction:column;gap:4px;padding:10px 14px;border:2px solid #facc15;border-radius:16px;background:rgba(20,20,20,.86);box-shadow:0 0 28px rgba(250,204,21,.18)}.title span{color:#facc15;font-size:12px;font-weight:900;letter-spacing:2px}h1{margin:0;font-size:36px;line-height:1;text-transform:uppercase}",
-  ".stats{max-width:1180px;margin:0 auto 12px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat,.info{background:rgba(0,0,0,.64);border:1px solid #333;border-radius:16px;padding:12px}.stat span{display:block;color:#aaa;font-size:12px;margin-bottom:5px}.stat b{color:#facc15;font-size:25px}.main{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr 390px;gap:12px}.side{background:rgba(0,0,0,.66);border:1px solid #333;border-radius:24px;padding:12px;min-height:580px;display:flex;flex-direction:column;gap:10px}.info h3{color:#facc15;margin:0 0 8px}.info p{color:#bbb;line-height:1.35;margin:0}.upgrade:disabled{opacity:.45}.achBtn{background:#111;color:#facc15;border:1px solid rgba(250,204,21,.45)}",
+  ".stats{max-width:1180px;margin:0 auto 12px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat,.info{background:rgba(0,0,0,.64);border:1px solid #333;border-radius:16px;padding:12px}.stat span{display:block;color:#aaa;font-size:12px;margin-bottom:5px}.stat b{color:#facc15;font-size:25px}.main{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr 390px;gap:12px}.side{background:rgba(0,0,0,.66);border:1px solid #333;border-radius:24px;padding:12px;min-height:580px;display:flex;flex-direction:column;gap:10px}.info h3{color:#facc15;margin:0 0 8px}.info p{color:#bbb;line-height:1.35;margin:0}.info span{display:block;color:#aaa;font-size:12px;margin-bottom:6px}.info b{color:#facc15}.upgrade:disabled{opacity:.45}.achBtn{background:#111;color:#facc15;border:1px solid rgba(250,204,21,.45)}",
   ".zone{min-height:580px;position:relative;overflow:hidden;border:1px solid #333;border-radius:24px;background:#0d0d0d;display:flex;align-items:center;justify-content:center}.back{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(250,204,21,.12),transparent 38%),linear-gradient(180deg,#1b1b1b,#070707);pointer-events:none}.adminWrap{position:relative;z-index:3;width:320px;height:420px;display:flex;align-items:center;justify-content:center}.admin{width:310px;height:410px;pointer-events:none}.admin.hit .figure{animation:tap .26s ease}@keyframes tap{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(.91) rotate(-2deg)}55%{transform:scale(1.06) rotate(2deg)}}",
   ".figure{width:100%;height:100%;position:relative;filter:drop-shadow(0 28px 65px rgba(0,0,0,.9))}.glow{position:absolute;left:50%;top:43%;width:320px;height:320px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(250,204,21,.14),transparent 64%);filter:blur(10px)}.body{position:absolute;left:50%;bottom:12px;width:252px;height:286px;transform:translateX(-50%);background:linear-gradient(180deg,#1d1d1d,#070707);border-radius:44px 44px 25px 25px;z-index:1}.shoulder{position:absolute;top:212px;width:88px;height:180px;background:linear-gradient(180deg,#151515,#050505);border-radius:45px;z-index:2}.shoulder.l{left:17px;transform:rotate(11deg)}.shoulder.r{right:17px;transform:rotate(-11deg)}.hood{position:absolute;top:2px;left:50%;width:215px;height:228px;transform:translateX(-50%);background:linear-gradient(180deg,#2a2a2a,#050505);border-radius:50% 50% 44% 44%;z-index:5}.rim{position:absolute;top:45px;left:50%;width:170px;height:182px;transform:translateX(-50%);background:linear-gradient(180deg,#080808,#000);border-radius:48% 48% 50% 50%;z-index:6;box-shadow:0 0 0 12px rgba(20,20,20,.75),inset 0 0 35px #000}",
   ".face{position:absolute;top:80px;left:50%;width:130px;height:110px;transform:translateX(-50%);background:#000;border-radius:45% 45% 52% 52%;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:visible}.eyes{display:flex;gap:22px;margin-bottom:14px;z-index:3}.eyes i{display:block;width:12px;height:12px;border-radius:50%;background:#facc15;box-shadow:0 0 10px rgba(250,204,21,.65);transition:.18s}.mouth{width:26px;height:10px;border-bottom:3px solid #facc15;border-radius:0 0 18px 18px;transition:.18s;z-index:3}.happy .eyes i{height:6px;border-radius:0 0 10px 10px}.happy .mouth{width:34px;height:14px;border-bottom-width:4px}.angry .eyes i,.steam .eyes i,.evil .eyes i{height:4px;border-radius:10px}.angry .eyes i:first-child,.steam .eyes i:first-child,.evil .eyes i:first-child{transform:rotate(20deg)}.angry .eyes i:last-child,.steam .eyes i:last-child,.evil .eyes i:last-child{transform:rotate(-20deg)}.angry .mouth,.steam .mouth,.lightning .mouth{height:0;border-radius:0}.surprised .mouth,.shock .mouth{width:12px;height:12px;border:3px solid #facc15;border-radius:50%}.tired .eyes i,.blink .eyes i{height:3px;border-radius:10px}.smirk .eyes i:last-child{height:5px}.smirk .mouth{transform:rotate(8deg)}",
@@ -677,6 +804,7 @@ const css = [
   ".cookie{position:absolute;top:-90px;z-index:28;width:70px;height:54px;cursor:pointer;border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff0b4,#d69535 64%,#8b4f12);box-shadow:inset -8px -10px 16px rgba(0,0,0,.22),0 14px 25px rgba(0,0,0,.35);animation:fall linear forwards;color:#2b1604;font-weight:1000;font-size:24px;display:flex;align-items:center;justify-content:center}.cookie i{position:absolute;left:32px;top:7px;width:4px;height:43px;background:rgba(78,38,10,.55)}@keyframes fall{100%{top:calc(100% + 100px);opacity:0;transform:rotate(24deg)}}.fortune,.win{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:45;width:min(88%,410px);border-radius:20px;padding:18px;text-align:center;box-shadow:0 25px 65px rgba(0,0,0,.58);cursor:pointer}.fortune{background:linear-gradient(180deg,#fff7d7,#f1d590);color:#1a1202;border:2px solid #facc15}.fortune b{display:inline-flex;margin-bottom:10px;padding:5px 9px;border-radius:999px;background:#1a1202;color:#facc15;font-size:11px;text-transform:uppercase}.fortune p{margin:0;font-size:20px;line-height:1.25;font-weight:900}.fortune small{display:block;margin-top:10px;color:rgba(26,18,2,.65);font-weight:900}.win{background:rgba(250,204,21,.97);color:#111;border:2px solid #fff2a8}.win b,.win span,.win strong{display:block}.win b{font-size:25px;text-transform:uppercase}.win strong{margin-top:10px;font-size:20px}",
   ".rulesList{display:flex;flex-direction:column;gap:8px;color:#ddd;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px;margin-bottom:14px}.rulesList b{color:#facc15}.achModal{width:min(94vw,640px)}.achList{display:grid;gap:10px;max-height:46vh;overflow:auto;margin:0 0 14px}.ach{background:linear-gradient(180deg,#151515,#0b0b0b);border:1px solid #333;border-radius:16px;padding:12px;display:grid;gap:8px}.ach.open{border-color:rgba(250,204,21,.78);box-shadow:0 0 20px rgba(250,204,21,.12)}.ach.lock{opacity:.74}.achHead{display:flex;gap:12px;align-items:flex-start}.achIcon{width:54px;height:54px;min-width:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000}.achIcon.open{background:radial-gradient(circle at 35% 25%,#fff4a8,#facc15 55%,#b97900);color:#111;box-shadow:0 0 22px rgba(250,204,21,.28),inset 0 -8px 14px rgba(0,0,0,.18)}.achIcon.lock{background:linear-gradient(180deg,#2a2a2a,#111);color:#777;border:1px solid #3a3a3a}.achText{display:grid;gap:4px}.ach b{color:#facc15}.ach span,.ach small{color:#aaa}.ach em{font-style:normal;color:#111;background:#facc15;border-radius:10px;padding:7px 9px;font-weight:1000}.ach.lock em{background:#222;color:#888}.ach i{display:block;height:8px;background:#222;border-radius:999px;overflow:hidden}.ach i u{display:block;height:100%;background:linear-gradient(90deg,#facc15,#ffe58a)}",
   ".achToast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:120;width:min(92vw,420px);display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,#181818,#090909);border:1px solid rgba(250,204,21,.75);border-radius:18px;padding:12px;box-shadow:0 0 34px rgba(250,204,21,.25),0 18px 50px rgba(0,0,0,.6);animation:toastIn .25s ease}.achToastIcon{width:54px;height:54px;min-width:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fff4a8,#facc15 55%,#b97900);color:#111;font-size:27px;font-weight:1000;box-shadow:0 0 22px rgba(250,204,21,.28)}.achToast div:last-child{display:grid;gap:3px}.achToast b{color:#facc15;font-size:15px}.achToast span{font-size:14px;font-weight:900}.achToast em{font-style:normal;color:#111;background:#facc15;border-radius:9px;padding:5px 8px;font-size:12px;font-weight:1000}@keyframes toastIn{0%{opacity:0;transform:translateX(-50%) translateY(-18px) scale(.94)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}",
+  ".rouletteO{z-index:130;background:rgba(0,0,0,.84)}.rouletteM{text-align:center;width:min(94vw,520px);border-color:rgba(250,204,21,.8);box-shadow:0 0 90px rgba(250,204,21,.25),0 30px 90px rgba(0,0,0,.8)}.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.slot{height:96px;border-radius:18px;background:linear-gradient(180deg,#070707,#1a1a1a);border:2px solid rgba(250,204,21,.55);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 24px rgba(0,0,0,.8),0 0 20px rgba(250,204,21,.12)}.slot span{font-size:48px;line-height:1}.slot.spinning .reel{display:grid;gap:18px;animation:reel .35s linear infinite}.slot.spinning:nth-child(2) .reel{animation-duration:.28s}.slot.spinning:nth-child(3) .reel{animation-duration:.23s}@keyframes reel{0%{transform:translateY(-188px)}100%{transform:translateY(188px)}}.promoBox{background:linear-gradient(180deg,#facc15,#d39b00);color:#111;border-radius:18px;padding:15px;margin:10px 0 14px;display:grid;gap:5px;box-shadow:0 0 26px rgba(250,204,21,.28)}.promoBox span{font-size:13px;font-weight:900}.promoBox b{font-size:30px;letter-spacing:2px}.promoBox small{font-weight:900;color:rgba(0,0,0,.68)}",
   ".bottom{max-width:1180px;margin:10px auto 0;color:#aaa;text-align:center;font-size:13px}.bottom b{color:#facc15}@media(max-width:900px){.game{max-width:460px;margin:0 auto}.main{grid-template-columns:1fr}.side{min-height:auto}.top{padding-right:0;margin-top:42px}}",
-  "@media(max-width:600px){.game{min-height:100dvh;width:100%;max-width:430px;margin:0 auto;padding:6px;display:flex;flex-direction:column}.prize{position:absolute;right:6px;top:6px;padding:6px 9px;font-size:11px}.overlay{padding:8px}.modal{width:100%;max-height:calc(100dvh - 16px);overflow:auto;padding:14px;border-radius:16px}.modal h2{font-size:20px}.modal p{font-size:12px}.top{margin:34px 0 5px;gap:6px;flex-direction:column-reverse}.sound{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px}.sound button{padding:8px 6px;font-size:10.5px}.title{padding:8px 10px}.title span{font-size:8px}h1{font-size:20px}.stats{width:100%;gap:5px;margin:0 0 6px}.stat{padding:7px 5px}.stat span{font-size:9px}.stat b{font-size:14px}.main{display:flex;flex-direction:column;gap:6px;flex:1}.zone{min-height:350px;height:53dvh;max-height:440px;border-radius:17px}.side{padding:0;border:0;background:transparent;border-radius:0;gap:6px}.info{display:none}.upgrade,.achBtn{padding:11px;font-size:12px}.adminWrap{width:232px;height:292px;margin-top:-4px}.admin{width:224px;height:292px}.glow{width:228px;height:228px}.body{width:180px;height:196px;bottom:8px}.shoulder{top:146px;width:56px;height:126px}.hood{width:146px;height:156px}.rim{top:30px;width:116px;height:126px}.face{top:54px;width:88px;height:76px}.eyes{gap:14px;margin-bottom:9px}.eyes i{width:8px;height:8px}.mouth{width:18px;height:7px;border-bottom-width:2px}.neck{top:121px;width:60px;height:44px}.logo{bottom:92px;font-size:18px;letter-spacing:2px}.pocket{bottom:28px;width:112px;height:44px}.bubble{max-width:182px;font-size:10.5px;padding:7px 9px;top:-2px}.float{top:36px;font-size:20px}.gold{width:60px;height:60px}.cookie{width:52px;height:40px;font-size:18px}.fortune,.win{width:90%;padding:13px;border-radius:15px}.fortune p{font-size:15px}.win b{font-size:17px}.win strong{font-size:15px}.achToast{top:48px;width:94vw;padding:10px}.achToastIcon{width:46px;height:46px;min-width:46px;font-size:22px}.bottom{margin-top:5px;font-size:11px}}",
+  "@media(max-width:600px){.game{min-height:100dvh;width:100%;max-width:430px;margin:0 auto;padding:6px;display:flex;flex-direction:column}.prize{position:absolute;right:6px;top:6px;padding:6px 9px;font-size:11px}.overlay{padding:8px}.modal{width:100%;max-height:calc(100dvh - 16px);overflow:auto;padding:14px;border-radius:16px}.modal h2{font-size:20px}.modal p{font-size:12px}.top{margin:34px 0 5px;gap:6px;flex-direction:column-reverse}.sound{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px}.sound button{padding:8px 6px;font-size:10.5px}.title{padding:8px 10px}.title span{font-size:8px}h1{font-size:20px}.stats{width:100%;gap:5px;margin:0 0 6px}.stat{padding:7px 5px}.stat span{font-size:9px}.stat b{font-size:14px}.main{display:flex;flex-direction:column;gap:6px;flex:1}.zone{min-height:350px;height:53dvh;max-height:440px;border-radius:17px}.side{padding:0;border:0;background:transparent;border-radius:0;gap:6px}.info{display:none}.upgrade,.achBtn{padding:11px;font-size:12px}.adminWrap{width:232px;height:292px;margin-top:-4px}.admin{width:224px;height:292px}.glow{width:228px;height:228px}.body{width:180px;height:196px;bottom:8px}.shoulder{top:146px;width:56px;height:126px}.hood{width:146px;height:156px}.rim{top:30px;width:116px;height:126px}.face{top:54px;width:88px;height:76px}.eyes{gap:14px;margin-bottom:9px}.eyes i{width:8px;height:8px}.mouth{width:18px;height:7px;border-bottom-width:2px}.neck{top:121px;width:60px;height:44px}.logo{bottom:92px;font-size:18px;letter-spacing:2px}.pocket{bottom:28px;width:112px;height:44px}.bubble{max-width:182px;font-size:10.5px;padding:7px 9px;top:-2px}.float{top:36px;font-size:20px}.gold{width:60px;height:60px}.cookie{width:52px;height:40px;font-size:18px}.fortune,.win{width:90%;padding:13px;border-radius:15px}.fortune p{font-size:15px}.win b{font-size:17px}.win strong{font-size:15px}.achToast{top:48px;width:94vw;padding:10px}.achToastIcon{width:46px;height:46px;min-width:46px;font-size:22px}.slots{gap:6px;margin:12px 0}.slot{height:76px;border-radius:14px}.slot span{font-size:38px}.promoBox b{font-size:24px}.bottom{margin-top:5px;font-size:11px}}",
 ].join("\n");
