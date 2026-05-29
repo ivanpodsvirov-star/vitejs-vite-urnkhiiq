@@ -1,197 +1,160 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const SAVE_KEY = "poklikai_admin_edc27_v6_mobile_moods_ads";
+const SAVE_KEY = "poklikai_admin_edc27_v9_achievements";
 const PLAYER_ID_KEY = "poklikai_admin_player_id_v1";
 
-const adminThoughts = [
-  "остынь банан",
-  "хочу дебаты",
-  "АРМИТЕК",
+const ADMIN_LINES = [
   "клик принят",
-  "где мой пауэрбанк",
-  "золотой фонарь где-то рядом",
-  "люменов много не бывает",
-  "это не баг, это режим ожидания",
-  "мне бы кофе и 21700",
-  "кто опять включил турбо",
   "не жми так яростно",
-  "я все вижу из-под капюшона",
-  "шанс растет, палец работает",
-  "проверяй серийник, герой",
-  "оптика решает, банан",
   "турбо не навсегда",
-  "мне нужен отпуск в режиме moonlight",
-  "контент-план горит ярче фонаря",
-  "официальный админ, официальные мысли",
-  "кликать надо с уважением",
-  "где мой EDC набор",
-  "я не греюсь, я раскрываюсь",
-  "свет есть, вопросов нет",
-  "не путай люмены с магией",
-  "кто принес дешевый аккумулятор",
-  "мне нужен темный фон и драматизм",
-  "если что, я был в энергосбережении",
-  "твой палец работает на ROI",
-  "Nitecore внутри, хаос снаружи",
+  "я все вижу из-под капюшона",
+  "шанс растет",
+  "люменов много не бывает",
+  "официальный админ на месте",
+  "палец работает на ROI",
 ];
 
-const ads = [
-  {
-    title: "EDC35 для тех, кто любит мощнее",
-    text: "Плоский EDC-фонарь с серьезным светом для города, машины и ежедневного набора.",
-    tag: "EDC-фонарь",
-    link: "https://nitecore.ru/catalog/fonari/edc35-/",
-  },
-  {
-    title: "EDC09 всегда под рукой",
-    text: "Компактный EDC-фонарь на каждый день. Удобно носить, быстро достать, легко использовать.",
-    tag: "Компактный EDC",
-    link: "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc09/",
-  },
-  {
-    title: "EDC17 для ежедневного набора",
-    text: "Карманный фонарь для тех, кто любит быть готовым к темноте заранее.",
-    tag: "На каждый день",
-    link: "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc17/",
-  },
-  {
-    title: "TIP SE Black на ключи",
-    text: "Мини-фонарь, который удобно носить вместе с ключами. Маленький формат, быстрый доступ к свету.",
-    tag: "Наключный фонарь",
-    link: "https://nitecore.ru/catalog/fonari/tip-se-black/",
-  },
-  {
-    title: "TIKI Grey для кармана",
-    text: "Легкий наключный фонарь для подъезда, сумки, машины и мелких задач каждый день.",
-    tag: "Мини-свет",
-    link: "https://nitecore.ru/catalog/fonari/naklyuchnye-fonari/t-naklyuchnye-fonari/tiki-grey-/",
-  },
-  {
-    title: "TUP2 Orange заметен сразу",
-    text: "Яркий наключный фонарь в оранжевом корпусе. Удобный вариант, чтобы свет был всегда рядом.",
-    tag: "Яркий EDC",
-    link: "https://nitecore.ru/catalog/fonari/naklyuchnye-fonari/t-naklyuchnye-fonari/tup2-orange/",
-  },
-  {
-    title: "EMR10 против комаров",
-    text: "Портативный электронный отпугиватель для отдыха, дачи, рыбалки и вечерних посиделок на улице.",
-    tag: "Для отдыха",
-    link: "https://nitecore.ru/catalog/tovary-dlya-turizma-i-otdykha-kemping/emr10-/",
-  },
-  {
-    title: "EMR30SE для летних выездов",
-    text: "Отпугиватель комаров и мошек для тех, кто хочет спокойно сидеть у палатки, машины или лагеря.",
-    tag: "Антикомар",
-    link: "https://nitecore.ru/catalog/tovary-dlya-turizma-i-otdykha-kemping/emr-portativnye-elektronnye-otpugivateli-ot-komarov-i-moshek/emr30se-/",
-  },
-  {
-    title: "CW10 для жары и палатки",
-    text: "Портативный вентилятор для кемпинга, рабочего места, поездки и жаркого летнего вечера.",
-    tag: "Портативный вентилятор",
-    link: "https://nitecore.ru/catalog/tovary-dlya-turizma-i-otdykha-kemping/cw10-/",
-  },
-  {
-    title: "CARBO 10000 для зарядки",
-    text: "Пауэрбанк для телефона, фонаря и другой техники, когда розетка далеко, а заряд нужен сейчас.",
-    tag: "Питание в дороге",
-    link: "https://nitecore.ru/catalog/istochniki-pitaniya/power-bank/carbo-10000-/",
-  },
-  {
-    title: "FSP30 для солнечной подзарядки",
-    text: "Солнечная панель для выездов, лагеря и ситуаций, когда хочется меньше зависеть от розетки.",
-    tag: "Солнечная панель",
-    link: "https://nitecore.ru/catalog/istochniki-pitaniya/fsp30-/",
-  },
+const FORTUNES = [
+  "Фонарь нужен за минуту до темноты.",
+  "Хороший EDC всегда с собой.",
+  "Проверь заряд заранее.",
+  "Маленький фонарь решает большие проблемы.",
+  "Турбо красиво, но экономный режим умнее.",
+  "Фонарь в машине однажды выручит.",
+  "Налобник освобождает руки.",
+  "IP68 радует, когда начинается дождь.",
+  "Запасной аккумулятор не бывает лишним.",
+  "Свет должен быть вовремя.",
 ];
 
-const adLinks = ads.map((item) => item.link);
+const ADS = [
+  ["EDC35", "Мощный плоский EDC-фонарь для города, машины и ежедневного набора.", "EDC-фонарь", "https://nitecore.ru/catalog/fonari/edc35-/"],
+  ["EDC09", "Компактный фонарь на каждый день. Быстро достать, удобно носить.", "Компактный EDC", "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc09/"],
+  ["EDC17", "Карманный фонарь для тех, кто любит быть готовым к темноте заранее.", "На каждый день", "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc17/"],
+  ["TIP SE Black", "Мини-фонарь на ключи. Маленький формат, быстрый доступ к свету.", "Наключный фонарь", "https://nitecore.ru/catalog/fonari/tip-se-black/"],
+  ["CARBO 10000", "Пауэрбанк для телефона, фонаря и другой техники, когда розетка далеко.", "Питание", "https://nitecore.ru/catalog/istochniki-pitaniya/power-bank/carbo-10000-/"],
+];
+
+const ACHIEVEMENTS = [
+  { id: "start", need: 5, title: "Первый свет", text: "5 кликов. Фонарь только включился.", icon: "✦" },
+  { id: "spark", need: 10, title: "Первая искра", text: "10 кликов. Админ понял, что ты настроен серьезно.", icon: "✧" },
+  { id: "warm", need: 25, title: "Разогрев диода", text: "25 кликов. Свет становится ярче.", icon: "◌" },
+  { id: "beam", need: 50, title: "Первый луч", text: "50 кликов. Луч уже прорезает темноту.", icon: "▸" },
+  { id: "pocket", need: 100, title: "Карманный EDC", text: "100 кликов. Свет уже лежит в кармане.", icon: "🔦" },
+  { id: "clip", need: 250, title: "Клипса на месте", text: "250 кликов. Фонарь готов к ежедневному ношению.", icon: "▰" },
+  { id: "promo5", need: 500, title: "Промокод 5%", text: "500 кликов. Открывается промокод на скидку 5%.", reward: "NITECORE5", icon: "🎟" },
+  { id: "mode", need: 750, title: "Смена режима", text: "750 кликов. Ты научился управлять светом.", icon: "◐" },
+  { id: "turbo", need: 1000, title: "Режим турбо", text: "1000 кликов. Палец вышел на максимальную яркость.", icon: "⚡" },
+  { id: "throw", need: 1500, title: "Дальний луч", text: "1500 кликов. Свет улетает дальше обычного.", icon: "➤" },
+  { id: "camp", need: 3000, title: "Ночной лагерь", text: "3000 кликов. В темноте уже не страшно.", icon: "▲" },
+  { id: "lumen", need: 5000, title: "Люмен-мастер", text: "5000 кликов. Люмены под контролем.", icon: "◉" },
+  { id: "water", need: 7500, title: "Защита от дождя", text: "7500 кликов. Погода больше не аргумент.", icon: "◆" },
+  { id: "guard", need: 10000, title: "Ночной дозор", text: "10000 кликов. Админ уважает выдержку.", icon: "◈" },
+  { id: "trail", need: 15000, title: "Тропа освещена", text: "15000 кликов. Можно идти дальше.", icon: "⬢" },
+  { id: "battery", need: 20000, title: "21700 внутри", text: "20000 кликов. Запас энергии почти легендарный.", icon: "▣" },
+  { id: "legend", need: 25000, title: "Легенда канала", text: "25000 кликов. Ты почти дошел до главной скидки.", icon: "✹" },
+  { id: "promo20", need: 30000, title: "Промокод 20%", text: "30000 кликов. Открывается промокод на скидку 20%.", reward: "NITECORE20", icon: "★" },
+];
 
 const defaultGame = {
   coins: 0,
-  clicks: 0,
   totalClicks: 0,
   chanceLevel: 0,
   hourlyBoost: 0,
   lastHourlyVisit: 0,
-  checks: 0,
   wins: 0,
   lastWinAt: 0,
 };
 
-function formatNumber(num) {
-  const value = Number(num) || 0;
-  if (value >= 1000000) return (value / 1000000).toFixed(1) + "M";
-  if (value >= 1000) return (value / 1000).toFixed(1) + "K";
-  return Math.floor(value).toString();
-}
+const rnd = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
 
-function getManualChance(level, hourlyBoost) {
-  return Math.min(0.01 + level * 0.01 + hourlyBoost * 0.01, 1.5);
-}
+const num = (n: number) =>
+  n >= 1000000
+    ? (n / 1000000).toFixed(1) + "M"
+    : n >= 1000
+    ? (n / 1000).toFixed(1) + "K"
+    : String(Math.floor(n || 0));
 
-function getUpgradeCost(level) {
-  return Math.floor(350 * Math.pow(1.8, level));
-}
+const chance = (g: any) => Math.min(0.01 + g.chanceLevel * 0.01 + g.hourlyBoost * 0.01, 1.5);
+const cost = (lvl: number) => Math.floor(350 * Math.pow(1.8, lvl));
+const makeId = () => window.crypto?.randomUUID?.() || "guest_" + Date.now();
 
-function makeId() {
-  return window.crypto?.randomUUID?.() || "guest_" + Date.now();
-}
-
-function applyHourlyVisitBonus(gameData) {
+function withHourlyBonus(g: any) {
   const now = Date.now();
-  const lastVisit = Number(gameData.lastHourlyVisit || 0);
 
-  if (!lastVisit || now - lastVisit >= 60 * 60 * 1000) {
+  if (!g.lastHourlyVisit || now - g.lastHourlyVisit >= 3600000) {
     return {
-      ...gameData,
-      hourlyBoost: Math.min(Number(gameData.hourlyBoost || 0) + 1, 149),
+      ...g,
+      hourlyBoost: Math.min((g.hourlyBoost || 0) + 1, 149),
       lastHourlyVisit: now,
     };
   }
 
-  return gameData;
+  return g;
+}
+
+function Stat({ title, value }: any) {
+  return (
+    <div className="stat">
+      <span>{title}</span>
+      <b>{value}</b>
+    </div>
+  );
 }
 
 export default function App() {
   const [game, setGame] = useState(defaultGame);
-  const [playerName, setPlayerName] = useState("Игрок");
-  const [goldLight, setGoldLight] = useState(null);
-  const [floatingText, setFloatingText] = useState([]);
-  const [winMessage, setWinMessage] = useState(false);
-  const [showRules, setShowRules] = useState(true);
+  const [player, setPlayer] = useState("Игрок");
+  const [gold, setGold] = useState<any>(null);
+  const [cookie, setCookie] = useState<any>(null);
+  const [fortune, setFortune] = useState("");
+  const [float, setFloat] = useState<any[]>([]);
+  const [win, setWin] = useState(false);
+  const [rules, setRules] = useState(true);
   const [thought, setThought] = useState("");
-  const [adPopup, setAdPopup] = useState(null);
-  const [adminHit, setAdminHit] = useState(false);
-  const [adminMood, setAdminMood] = useState("normal");
-  const [tapCount, setTapCount] = useState(0);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [musicEnabled, setMusicEnabled] = useState(false);
-  const adminTargetRef = useRef(null);
-  const audioRef = useRef(null);
-  const musicTimerRef = useRef(null);
+  const [ad, setAd] = useState<any>(null);
+  const [hit, setHit] = useState(false);
+  const [mood, setMood] = useState("normal");
+  const [sound, setSound] = useState(true);
+  const [music, setMusic] = useState(false);
+  const [achOpen, setAchOpen] = useState(false);
+  const [achToast, setAchToast] = useState<any>(null);
+
+  const adminRef = useRef<any>(null);
+  const audioRef = useRef<any>(null);
+  const musicRef = useRef<any>(null);
+
+  const curChance = useMemo(() => chance(game), [game.chanceLevel, game.hourlyBoost]);
+  const upCost = useMemo(() => cost(game.chanceLevel), [game.chanceLevel]);
+
+  const achList = useMemo(
+    () =>
+      ACHIEVEMENTS.map((a) => ({
+        ...a,
+        unlocked: game.totalClicks >= a.need,
+      })),
+    [game.totalClicks]
+  );
+
+  const achDone = achList.filter((a) => a.unlocked).length;
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     tg?.ready?.();
     tg?.expand?.();
 
-    const user = tg?.initDataUnsafe?.user;
+    const u = tg?.initDataUnsafe?.user;
+    localStorage.setItem(PLAYER_ID_KEY, u?.id ? String(u.id) : localStorage.getItem(PLAYER_ID_KEY) || makeId());
 
-    let id = localStorage.getItem(PLAYER_ID_KEY) || makeId();
-    if (user?.id) id = String(user.id);
-    localStorage.setItem(PLAYER_ID_KEY, id);
-
-    if (user?.username) setPlayerName("@" + user.username);
-    else if (user?.first_name) setPlayerName(user.first_name);
+    if (u?.username) setPlayer("@" + u.username);
+    else if (u?.first_name) setPlayer(u.first_name);
 
     try {
-      const saved = localStorage.getItem(SAVE_KEY);
-      const loaded = saved ? { ...defaultGame, ...JSON.parse(saved) } : defaultGame;
-      setGame(applyHourlyVisitBonus(loaded));
-    } catch (error) {
-      localStorage.removeItem(SAVE_KEY);
-      setGame(applyHourlyVisitBonus(defaultGame));
+      const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+      setGame(withHourlyBonus(saved ? { ...defaultGame, ...saved } : defaultGame));
+    } catch {
+      setGame(withHourlyBonus(defaultGame));
     }
   }, []);
 
@@ -199,697 +162,503 @@ export default function App() {
     localStorage.setItem(SAVE_KEY, JSON.stringify(game));
   }, [game]);
 
-  const manualChance = useMemo(() => getManualChance(game.chanceLevel, game.hourlyBoost), [game.chanceLevel, game.hourlyBoost]);
-  const upgradeCost = useMemo(() => getUpgradeCost(game.chanceLevel), [game.chanceLevel]);
+  function ctx() {
+    const AC = window.AudioContext || window.webkitAudioContext;
 
-  function addFloatingText(text) {
-    const id = Date.now() + Math.random();
-    setFloatingText((prev) => [...prev, { id, text, x: Math.floor(Math.random() * 90 - 45) }]);
-
-    setTimeout(() => {
-      setFloatingText((prev) => prev.filter((item) => item.id !== id));
-    }, 650);
-  }
-
-  function getAudioContext() {
-    if (!soundEnabled && !musicEnabled) return null;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return null;
-
-    if (!audioRef.current) audioRef.current = new AudioContext();
+    if (!AC) return null;
+    if (!audioRef.current) audioRef.current = new AC();
     if (audioRef.current.state === "suspended") audioRef.current.resume();
+
     return audioRef.current;
   }
 
-  function playTone(freq = 440, duration = 0.08, volume = 0.035, type = "sine") {
-    if (!soundEnabled) return;
+  function beep(f = 600, d = 0.06, v = 0.025, type = "sine") {
+    if (!sound) return;
 
-    const ctx = getAudioContext();
-    if (!ctx) return;
+    const c = ctx();
+    if (!c) return;
 
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    const o = c.createOscillator();
+    const g = c.createGain();
 
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+    o.type = type;
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(v, c.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + d);
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + duration + 0.02);
+    o.connect(g);
+    g.connect(c.destination);
+    o.start();
+    o.stop(c.currentTime + d + 0.02);
   }
 
-  function playClickSound() {
-    playTone(620 + Math.random() * 90, 0.055, 0.026, "sine");
-  }
+  useEffect(() => {
+    clearInterval(musicRef.current);
+    musicRef.current = null;
 
-  function playMoodSound() {
-    playTone(420, 0.06, 0.022, "triangle");
-    setTimeout(() => playTone(520, 0.07, 0.018, "triangle"), 55);
-  }
-
-  function playWinSound() {
-    playTone(660, 0.09, 0.04, "sine");
-    setTimeout(() => playTone(880, 0.11, 0.04, "sine"), 90);
-    setTimeout(() => playTone(1320, 0.16, 0.035, "sine"), 190);
-  }
-
-  function playUpgradeSound() {
-    playTone(520, 0.07, 0.028, "triangle");
-    setTimeout(() => playTone(700, 0.08, 0.026, "triangle"), 70);
-  }
-
-  function startMusic() {
-    const ctx = getAudioContext();
-    if (!ctx || musicTimerRef.current) return;
+    if (!music) return;
 
     const notes = [196, 247, 294, 330, 294, 247];
-    let step = 0;
+    let i = 0;
 
-    musicTimerRef.current = setInterval(() => {
-      if (!musicEnabled) return;
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-      const now = ctx.currentTime;
-
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(notes[step % notes.length], now);
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(900, now);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.012, now + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 1);
-      step += 1;
+    musicRef.current = setInterval(() => {
+      if (sound) beep(notes[i++ % notes.length], 0.35, 0.012, "sine");
     }, 780);
-  }
 
-  function stopMusic() {
-    if (musicTimerRef.current) {
-      clearInterval(musicTimerRef.current);
-      musicTimerRef.current = null;
-    }
-  }
+    return () => clearInterval(musicRef.current);
+  }, [music, sound]);
 
-  function toggleMusic() {
-    setMusicEnabled((prev) => {
-      const next = !prev;
-      if (!next) stopMusic();
-      return next;
-    });
-  }
-
-  useEffect(() => {
-    if (musicEnabled) startMusic();
-    else stopMusic();
-
-    return () => stopMusic();
-  }, [musicEnabled]);
-
-  function showAdminThought() {
-    const phrase = adminThoughts[Math.floor(Math.random() * adminThoughts.length)];
-    setThought(phrase);
-    setTimeout(() => setThought(""), 2400);
-  }
-
-  function makeAdWithLink() {
-    return ads[Math.floor(Math.random() * ads.length)];
-  }
-
-  function showRandomAd() {
-    setAdPopup(makeAdWithLink());
-  }
-
-  function openAdSite() {
-    const link = adPopup?.link || adLinks[Math.floor(Math.random() * adLinks.length)];
-    const tg = window.Telegram?.WebApp;
-
-    try {
-      if (tg?.openLink) {
-        tg.openLink(link, { try_instant_view: false });
-      } else {
-        const opened = window.open(link, "_blank", "noopener,noreferrer");
-        if (!opened) window.location.href = link;
-      }
-    } catch (error) {
-      window.location.href = link;
-    }
-
-    setAdPopup(null);
-  }
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (Math.random() > 0.72) showAdminThought();
-    }, 22000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (showRules) return;
-
-    const timer = setInterval(() => {
-      setAdPopup((current) => {
-        if (current) return current;
-        if (Math.random() > 0.76) return makeAdWithLink();
-        return null;
-      });
-    }, 28000);
-
-    return () => clearInterval(timer);
-  }, [showRules]);
-
-  function showWin() {
-    playWinSound();
-    setGoldLight(null);
-    setWinMessage(true);
-
-    setGame((prev) => ({
-      ...prev,
-      wins: prev.wins + 1,
-      lastWinAt: prev.totalClicks,
-    }));
-
-    addFloatingText("ПОБЕДА!");
-    setTimeout(() => setWinMessage(false), 4500);
-  }
-
-  function spawnGoldLight() {
-    if (goldLight) return;
-
+  function addFloat(text: string) {
     const id = Date.now() + Math.random();
-    const item = {
-      id,
-      top: Math.floor(70 + Math.random() * 200),
-      duration: 3.2 + Math.random() * 1.1,
-      direction: Math.random() > 0.5 ? "left" : "right",
-    };
 
-    setGoldLight(item);
+    setFloat((f) => [...f, { id, text, x: Math.random() * 90 - 45 }]);
 
     setTimeout(() => {
-      setGoldLight((current) => (current?.id === id ? null : current));
-    }, item.duration * 1000);
+      setFloat((f) => f.filter((v) => v.id !== id));
+    }, 650);
   }
 
-  function rollManualChance(nextTotalClicks) {
-    if (nextTotalClicks % 10 !== 0) return;
-
-    setGame((prev) => ({ ...prev, checks: prev.checks + 1 }));
-
-    const roll = Math.random() * 100;
-    if (roll <= manualChance) spawnGoldLight();
+  function sayAdmin() {
+    setThought(rnd(ADMIN_LINES));
+    setTimeout(() => setThought(""), 2200);
   }
 
-  function pressPlayArea(event) {
-    if (showRules || adPopup) return;
+  useEffect(() => {
+    if (rules) return;
 
-    const target = adminTargetRef.current;
-    if (!target) return;
+    const t = setInterval(() => {
+      setAd((old: any) => {
+        if (old || gold) return old;
+        return rnd(ADS);
+      });
+    }, 60000);
 
-    const rect = target.getBoundingClientRect();
-    const x = event.clientX;
-    const y = event.clientY;
-    const safeZone = 18;
+    return () => clearInterval(t);
+  }, [rules, gold]);
 
-    const insideAdmin =
-      x >= rect.left - safeZone &&
-      x <= rect.right + safeZone &&
-      y >= rect.top - safeZone &&
-      y <= rect.bottom + safeZone;
+  function openAd() {
+    const link = ad?.[3] || ADS[0][3];
+    const tg = window.Telegram?.WebApp;
 
-    if (!insideAdmin) return;
+    setAd(null);
 
-    event.preventDefault();
-    event.stopPropagation();
-    clickAdmin();
+    setTimeout(() => {
+      try {
+        if (tg?.openLink) tg.openLink(link, { try_instant_view: false });
+        else window.open(link, "_blank", "noopener,noreferrer") || (window.location.href = link);
+      } catch {
+        window.location.href = link;
+      }
+    }, 30);
+  }
+
+  function spawnGold() {
+    if (gold || ad || rules) return;
+
+    const id = Date.now() + Math.random();
+
+    const item = {
+      id,
+      top: 70 + Math.random() * 200,
+      time: 3.2 + Math.random(),
+      dir: Math.random() > 0.5 ? "left" : "right",
+    };
+
+    setGold(item);
+    setTimeout(() => setGold((g: any) => (g?.id === id ? null : g)), item.time * 1000);
+  }
+
+  function spawnCookie() {
+    if (cookie || fortune || ad || rules) return;
+
+    const id = Date.now() + Math.random();
+
+    const item = {
+      id,
+      left: 12 + Math.random() * 76,
+      time: 5,
+    };
+
+    setCookie(item);
+    setTimeout(() => setCookie((c: any) => (c?.id === id ? null : c)), item.time * 1000);
+  }
+
+  function openCookie(e: any) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setCookie(null);
+    setFortune(rnd(FORTUNES));
+    beep(520, 0.08, 0.02, "triangle");
+  }
+
+  function closeCookie(e: any) {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    setFortune("");
+  }
+
+  function winGold(e: any) {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+
+    if (!gold) return;
+
+    setGold(null);
+    setWin(true);
+
+    beep(660, 0.08, 0.04);
+    setTimeout(() => beep(900, 0.1, 0.035), 80);
+
+    setGame((g) => ({
+      ...g,
+      wins: g.wins + 1,
+      lastWinAt: g.totalClicks,
+    }));
+
+    setTimeout(() => setWin(false), 4200);
+  }
+
+  function showAchievementToast(a: any) {
+    setAchToast(a);
+    addFloat("достижение!");
+
+    beep(760, 0.08, 0.035, "triangle");
+    setTimeout(() => beep(980, 0.09, 0.03, "triangle"), 90);
+
+    setTimeout(() => setAchToast(null), 3600);
   }
 
   function clickAdmin() {
-    playClickSound();
+    beep(620 + Math.random() * 90, 0.05, 0.022);
 
-    const nextTap = tapCount + 1;
-    setTapCount(nextTap);
+    setGame((g) => {
+      const n = g.totalClicks + 1;
 
-    if (nextTap % 10 === 0) {
-      setAdminHit(false);
-      setTimeout(() => {
-        setAdminHit(true);
-        setTimeout(() => setAdminHit(false), 280);
-      }, 0);
-    }
+      if (n % 10 === 0) {
+        setHit(false);
+        setTimeout(() => setHit(true), 0);
+        setTimeout(() => setHit(false), 280);
 
-    const commonMoods = ["happy", "angry", "surprised", "tired", "blink", "smirk", "dizzy"];
-    const rareMoods = ["evil", "steam", "lightning", "shock"];
+        if (Math.random() * 100 <= chance(g)) {
+          setTimeout(spawnGold, 0);
+        }
+      }
 
-    if (nextTap % 5 === 0) {
-      const pool = nextTap % 25 === 0 || Math.random() > 0.86 ? rareMoods : commonMoods;
-      const nextMood = pool[Math.floor(Math.random() * pool.length)];
-      setAdminMood(nextMood);
-      playMoodSound();
-      setTimeout(() => setAdminMood("normal"), 1500);
-    }
+      if (n % 5 === 0) {
+        const common = ["happy", "angry", "surprised", "tired", "blink", "smirk"];
+        const rare = ["evil", "steam", "lightning", "shock"];
 
-    setGame((prev) => {
-      const nextTotalClicks = prev.totalClicks + 1;
-      setTimeout(() => rollManualChance(nextTotalClicks), 0);
+        setMood(rnd(n % 25 === 0 || Math.random() > 0.86 ? rare : common));
+        setTimeout(() => setMood("normal"), 1500);
+      }
+
+      if (n % 100 === 0) {
+        setTimeout(spawnCookie, 0);
+      }
+
+      const newAch = ACHIEVEMENTS.find((a) => a.need === n);
+      if (newAch) {
+        setTimeout(() => showAchievementToast(newAch), 0);
+      }
+
+      if (Math.random() > 0.985) {
+        setTimeout(sayAdmin, 0);
+      }
 
       return {
-        ...prev,
-        coins: prev.coins + 1,
-        clicks: prev.clicks + 1,
-        totalClicks: nextTotalClicks,
+        ...g,
+        coins: g.coins + 1,
+        totalClicks: n,
       };
     });
 
-    addFloatingText("+1");
-
-    if (Math.random() > 0.982) showAdminThought();
-    if (Math.random() > 0.992 && !adPopup && !showRules) showRandomAd();
+    addFloat("+1");
   }
 
-  function catchGoldLight() {
-    if (!goldLight) return;
-    showWin();
+  function pressArea(e: any) {
+    if (rules || ad || fortune) return;
+
+    const r = adminRef.current?.getBoundingClientRect();
+    if (!r) return;
+
+    const ok =
+      e.clientX >= r.left - 18 &&
+      e.clientX <= r.right + 18 &&
+      e.clientY >= r.top - 18 &&
+      e.clientY <= r.bottom + 18;
+
+    if (!ok) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    clickAdmin();
   }
 
-  function upgradeChance() {
-    if (game.coins < upgradeCost) return;
-    if (manualChance >= 1.5) return;
+  function upgrade() {
+    if (game.coins < upCost || curChance >= 1.5) return;
 
-    playUpgradeSound();
+    beep(520, 0.08, 0.03, "triangle");
 
-    setGame((prev) => ({
-      ...prev,
-      coins: prev.coins - upgradeCost,
-      chanceLevel: prev.chanceLevel + 1,
+    setGame((g) => ({
+      ...g,
+      coins: g.coins - upCost,
+      chanceLevel: g.chanceLevel + 1,
     }));
 
-    addFloatingText("шанс +");
+    addFloat("шанс +");
   }
 
   return (
     <div className="game">
-      <style>{styles}</style>
+      <style>{css}</style>
 
-      <div className="prizeCorner">Приз: <b>EDC27</b></div>
+      <div className="prize">
+        Приз: <b>EDC27</b>
+      </div>
 
-      {showRules && (
-        <div className="rulesOverlay">
-          <div className="rulesModal">
-            <div className="rulesBadge">Правила розыгрыша</div>
+      {achToast && (
+        <div className="achToast">
+          <div className="achToastIcon">{achToast.icon}</div>
+          <div>
+            <b>Достижение открыто!</b>
+            <span>{achToast.title}</span>
+            {achToast.reward && <em>Промокод: {achToast.reward}</em>}
+          </div>
+        </div>
+      )}
+
+      {rules && (
+        <div className="overlay">
+          <div className="modal">
+            <div className="badge">Правила розыгрыша</div>
             <h2>Поймай золотой фонарь</h2>
             <p>
-              Ваша задача поймать золотой фонарь и первым отправить скриншот победы в чат.
+              Кликайте по админу, поймайте золотой фонарь и отправьте скриншот победы в комментарии.
+              Первый скриншот забирает приз.
             </p>
+
             <div className="rulesList">
-              <div><b>1.</b> Золотой фонарь случайно появляется на экране, пока вы кликаете по админу.</div>
-              <div><b>2.</b> Чем больше кликов, тем выше шанс появления фонаря.</div>
-              <div><b>3.</b> Успейте нажать на фонарь, сделайте скриншот и отправьте его в чат. Первый забирает приз EDC27.</div>
+              <div><b>1.</b> Кликайте по админу и копите монеты.</div>
+              <div><b>2.</b> Улучшайте шанс появления золотого фонаря.</div>
+              <div><b>3.</b> Когда появится золотой фонарь, нажмите на него.</div>
+              <div><b>4.</b> Сделайте скриншот победы и отправьте его в комментарии.</div>
             </div>
-            <button className="rulesButton" onClick={() => setShowRules(false)}>Понятно, играть</button>
+
+            <button onClick={() => setRules(false)}>Понятно, играть</button>
           </div>
         </div>
       )}
 
-      {adPopup && (
-        <div className="adOverlay">
-          <div className="adModal">
-            <div className="adTag">{adPopup.tag}</div>
-            <h2>{adPopup.title}</h2>
-            <p>{adPopup.text}</p>
-            <div className="adActions">
-              <button className="adSite" onClick={openAdSite}>На сайт</button>
-              <button className="adClose" onClick={() => setAdPopup(null)}>Закрыть</button>
+      {ad && (
+        <div className="overlay adO">
+          <div className="modal adM">
+            <div className="badge dark">{ad[2]}</div>
+            <h2>{ad[0]}</h2>
+            <p>{ad[1]}</p>
+
+            <div className="adBtns">
+              <button onClick={openAd}>На сайт</button>
+              <button className="ghost" onClick={() => setAd(null)}>Закрыть</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="topPanel">
-        <div className="soundPanel">
-          <button className="soundButton" onClick={() => setSoundEnabled((prev) => !prev)}>{soundEnabled ? "Звук: вкл" : "Звук: выкл"}</button>
-          <button className="soundButton" onClick={toggleMusic}>{musicEnabled ? "Музыка: вкл" : "Музыка: выкл"}</button>
+      {achOpen && (
+        <div className="overlay">
+          <div className="modal achModal">
+            <div className="badge">Достижения</div>
+            <h2>Фонарные достижения</h2>
+            <p>Открыто: {achDone} из {ACHIEVEMENTS.length}. Закрытые достижения полностью скрыты до получения.</p>
+
+            <div className="achList">
+              {achList.map((a) => (
+                <div key={a.id} className={"ach " + (a.unlocked ? "open" : "lock")}>
+                  <div className="achHead">
+                    <div className={"achIcon " + (a.unlocked ? "open" : "lock")}>
+                      {a.unlocked ? a.icon : "?"}
+                    </div>
+
+                    <div className="achText">
+                      <b>{a.unlocked ? a.title : "Секретное достижение"}</b>
+                      <span>{a.unlocked ? a.text : "Описание скрыто до открытия."}</span>
+                    </div>
+                  </div>
+
+                  {a.reward && (
+                    <em>{a.unlocked ? "Промокод: " + a.reward : "Награда скрыта"}</em>
+                  )}
+
+                  <small>{a.unlocked ? "Открыто" : "Условие скрыто"}</small>
+                  <i><u style={{ width: a.unlocked ? "100%" : "0%" }} /></i>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => setAchOpen(false)}>Закрыть</button>
+          </div>
         </div>
-        <div className="titleFrame">
-          <div className="miniText">NITECORE</div>
+      )}
+
+      <div className="top">
+        <div className="sound">
+          <button onClick={() => setSound((s) => !s)}>Звук: {sound ? "вкл" : "выкл"}</button>
+          <button onClick={() => setMusic((m) => !m)}>Музыка: {music ? "вкл" : "выкл"}</button>
+        </div>
+
+        <div className="title">
+          <span>NITECORE</span>
           <h1>Кликни админа</h1>
         </div>
       </div>
 
-      <div className="statsGrid">
-        <Stat title="Монеты" value={formatNumber(game.coins)} />
-        <Stat title="Клики" value={formatNumber(game.totalClicks)} />
+      <div className="stats">
+        <Stat title="Монеты" value={num(game.coins)} />
+        <Stat title="Клики" value={num(game.totalClicks)} />
       </div>
 
-      <div className="mainArea">
-        <div className="clickZone" onPointerDown={pressPlayArea}>
-          <div className="simpleBack" />
+      <div className="main">
+        <div className="zone" onPointerDown={pressArea}>
+          <div className="back" />
 
-          {goldLight && (
+          {gold && (
             <button
-              className={"goldLight " + goldLight.direction}
-              style={{ top: goldLight.top, animationDuration: goldLight.duration + "s" }}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                catchGoldLight();
-              }}
-              aria-label="Поймать золотой фонарь"
+              className={"gold " + gold.dir}
+              style={{ top: gold.top, animationDuration: gold.time + "s" }}
+              onPointerDown={winGold}
             >
-              <div className="goldBeam" />
-              <div className="goldBody" />
-              <div className="goldHead" />
+              <i />
+              <b />
               <span>ЖМИ!</span>
             </button>
           )}
 
-          {winMessage && (
-            <div className="winBox">
-              <b>Поздравляю, ты победил!</b>
+          {cookie && (
+            <div
+              className="cookie"
+              style={{ left: cookie.left + "%", animationDuration: cookie.time + "s" }}
+              onPointerDown={openCookie}
+            >
+              <i />?
+            </div>
+          )}
+
+          {fortune && (
+            <div className="fortune" onPointerDown={closeCookie}>
+              <b>Печенье с предсказанием</b>
+              <p>{fortune}</p>
+              <small>Нажми, чтобы закрыть</small>
+            </div>
+          )}
+
+          {win && (
+            <div className="win">
+              <b>Победа!</b>
               <span>Ты поймал золотой фонарь</span>
               <strong>Приз: Nitecore EDC27</strong>
             </div>
           )}
 
           <div className="adminWrap">
-            {thought && <div className="thoughtBubble">{thought}</div>}
+            {thought && <div className="bubble">{thought}</div>}
 
-            {floatingText.map((item) => (
-              <div key={item.id} className="floating" style={{ marginLeft: item.x }}>{item.text}</div>
+            {float.map((f) => (
+              <div key={f.id} className="float" style={{ marginLeft: f.x }}>
+                {f.text}
+              </div>
             ))}
 
-            <div
-              ref={adminTargetRef}
-              className={"adminButton " + (adminHit ? "hit" : "")}
-              aria-hidden="true"
-            >
-              <div className="adminFigure">
-                <div className="adminGlow" />
-                <div className="adminBody" />
-                <div className="adminShoulder left" />
-                <div className="adminShoulder right" />
-                <div className="adminHoodOuter" />
-                <div className="adminHoodRim" />
-                <div className={"adminFaceShadow " + adminMood}>
-                  {(adminMood === "steam" || adminMood === "angry" || adminMood === "evil") && (
-                    <div className="steamWrap">
-                      <span className="steam s1" />
-                      <span className="steam s2" />
-                      <span className="steam s3" />
-                    </div>
-                  )}
-
-                  {(adminMood === "lightning" || adminMood === "shock") && (
-                    <div className="lightningWrap">
-                      <span className="lightningBolt left" />
-                      <span className="lightningBolt right" />
-                    </div>
-                  )}
-
-                  <div className="faceEyes">
-                    <span className="eye left" />
-                    <span className="eye right" />
-                  </div>
-                  <div className="faceMouth" />
-                </div>
-                <div className="adminNeckShadow" />
-                <div className="adminPocket" />
-                <div className="adminLogo">NITECORE</div>
-              </div>
-            </div>
+            <Admin refEl={adminRef} hit={hit} mood={mood} />
           </div>
         </div>
 
-        <div className="sidePanel">
-          <div className="infoCard">
+        <div className="side">
+          <div className="info">
             <h3>Как играть</h3>
-            <p>Ваша задача поймать золотой фонарь. Он случайно появляется на экране, пока вы кликаете по админу. Чем больше кликов, тем выше шанс. Успейте нажать на фонарь и пришлите скриншот победы в чат.</p>
+            <p>Поймай золотой фонарь, сделай скриншот победы и отправь его в комментарии.</p>
           </div>
 
-          <button
-            className="upgradeButton"
-            disabled={game.coins < upgradeCost || manualChance >= 1.5}
-            onClick={upgradeChance}
-          >
-            {manualChance >= 1.5 ? "Максимальный шанс" : "Увеличить шанс за " + formatNumber(upgradeCost) + " монет"}
+          <button className="achBtn" onClick={() => setAchOpen(true)}>
+            Достижения: {achDone}/{ACHIEVEMENTS.length}
+          </button>
+
+          <button className="upgrade" disabled={game.coins < upCost || curChance >= 1.5} onClick={upgrade}>
+            {curChance >= 1.5 ? "Максимальный шанс" : "Увеличить шанс за " + num(upCost) + " монет"}
           </button>
 
           {game.wins > 0 && (
-            <div className="lastWin">
+            <div className="info">
               <span>Последний выигрыш</span>
-              <b>EDC27 на {formatNumber(game.lastWinAt)} кликах</b>
+              <b>EDC27 на {num(game.lastWinAt)} кликах</b>
             </div>
           )}
         </div>
       </div>
 
-      <div className="bottomText">Игрок: <b>{playerName}</b></div>
+      <div className="bottom">
+        Игрок: <b>{player}</b>
+      </div>
     </div>
   );
 }
 
-function Stat({ title, value }) {
+function Admin({ refEl, hit, mood }: any) {
+  const steam = mood === "steam" || mood === "angry" || mood === "evil";
+  const lightning = mood === "lightning" || mood === "shock";
+
   return (
-    <div className="statCard">
-      <span>{title}</span>
-      <b>{value}</b>
+    <div ref={refEl} className={"admin " + (hit ? "hit" : "")} aria-hidden="true">
+      <div className="figure">
+        <div className="glow" />
+        <div className="body" />
+        <div className="shoulder l" />
+        <div className="shoulder r" />
+        <div className="hood" />
+        <div className="rim" />
+
+        <div className={"face " + mood}>
+          {steam && (
+            <div className="steam">
+              <span /><span /><span />
+            </div>
+          )}
+
+          {lightning && (
+            <div className="bolt">
+              <span /><span />
+            </div>
+          )}
+
+          <div className="eyes"><i /><i /></div>
+          <div className="mouth" />
+        </div>
+
+        <div className="neck" />
+        <div className="pocket" />
+        <div className="logo">NITECORE</div>
+      </div>
     </div>
   );
 }
 
-const styles = `
-* { box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-touch-callout: none; }
-html, body, #root { min-height: 100%; }
-body { margin: 0; background: #080808; overflow-x: hidden; }
-button, a, .adminButton, .adminButton * { -webkit-tap-highlight-color: rgba(0,0,0,0) !important; outline: none !important; user-select: none !important; -webkit-user-select: none !important; -webkit-touch-callout: none !important; -webkit-user-drag: none !important; }
-button:focus, button:focus-visible, a:focus, a:focus-visible, .adminButton:focus, .adminButton:focus-visible { outline: none !important; box-shadow: none !important; background-color: transparent !important; }
-.adminButton::selection, .adminButton *::selection { background: transparent; color: inherit; }
-.game {
-  min-height: 100svh;
-  color: white;
-  padding: 14px;
-  font-family: Arial, sans-serif;
-  background: radial-gradient(circle at 50% 10%, rgba(250,204,21,.18), transparent 24%), linear-gradient(135deg, #070707, #171717 48%, #050505);
-  position: relative;
-}
-.prizeCorner {
-  position: fixed;
-  right: 12px;
-  top: 12px;
-  z-index: 50;
-  background: rgba(0,0,0,.76);
-  border: 1px solid rgba(250,204,21,.45);
-  color: #facc15;
-  padding: 9px 12px;
-  border-radius: 14px;
-  font-size: 14px;
-  font-weight: 900;
-  box-shadow: 0 0 25px rgba(250,204,21,.12);
-}
-.rulesOverlay { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.78); display: flex; align-items: center; justify-content: center; padding: 16px; }
-.rulesModal { width: min(94vw, 540px); background: linear-gradient(180deg, #181818, #080808); border: 1px solid rgba(250,204,21,.42); border-radius: 24px; padding: 22px; box-shadow: 0 0 70px rgba(250,204,21,.18), 0 30px 90px rgba(0,0,0,.75); }
-.rulesBadge { display: inline-flex; background: rgba(250,204,21,.15); border: 1px solid rgba(250,204,21,.35); color: #facc15; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 1000; margin-bottom: 10px; }
-.rulesModal h2 { margin: 0 0 10px; font-size: 30px; text-transform: uppercase; color: #facc15; }
-.rulesModal p { color: #ddd; line-height: 1.35; margin: 0 0 14px; }
-.rulesList { display: flex; flex-direction: column; gap: 8px; color: #ddd; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 12px; }
-.rulesList b { color: #facc15; }
-.rulesButton { width: 100%; margin-top: 14px; background: #facc15; color: #111; border: 0; border-radius: 14px; padding: 14px; font-weight: 1000; cursor: pointer; }
-.adOverlay { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.5); padding: 16px; }
-.adModal { width: min(92vw, 380px); background: linear-gradient(180deg, #202020, #090909); border: 1px solid rgba(250,204,21,.45); border-radius: 22px; padding: 18px; box-shadow: 0 0 60px rgba(250,204,21,.16), 0 24px 80px rgba(0,0,0,.7); text-align: center; animation: adPop .2s ease; }
-.adTag { display: inline-flex; color: #111; background: #facc15; border-radius: 999px; padding: 5px 10px; font-size: 11px; font-weight: 1000; margin-bottom: 10px; }
-.adModal h2 { margin: 0 0 8px; color: #facc15; font-size: 26px; }
-.adModal p { margin: 0 0 14px; color: #ddd; line-height: 1.35; }
-.adActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.adSite, .adClose { width: 100%; border: 0; border-radius: 13px; padding: 12px; font-weight: 1000; cursor: pointer; text-align: center; text-decoration: none; display: block; font-family: inherit; font-size: 14px; }
-.adSite { background: #facc15; color: #111; }
-.adClose { background: #181818; color: #facc15; border: 1px solid rgba(250,204,21,.35); }
-@keyframes adPop { 0% { opacity: 0; transform: scale(.86); } 100% { opacity: 1; transform: scale(1); } }
-.topPanel { max-width: 1180px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 125px; }
-.soundPanel { display: flex; gap: 6px; flex-wrap: wrap; }
-.soundButton { background: rgba(0,0,0,.72); color: #facc15; border: 1px solid rgba(250,204,21,.38); border-radius: 12px; padding: 9px 10px; font-size: 12px; font-weight: 1000; cursor: pointer; }
-.titleFrame { display: inline-flex; flex-direction: column; gap: 4px; padding: 10px 14px; border: 2px solid #facc15; border-radius: 16px; background: rgba(20,20,20,.86); box-shadow: 0 0 28px rgba(250,204,21,.18); }
-.miniText { color: #facc15; font-size: 12px; font-weight: 900; letter-spacing: 2px; }
-h1 { margin: 0; font-size: 36px; line-height: 1; text-transform: uppercase; }
-.statsGrid { max-width: 1180px; margin: 0 auto 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.statCard { background: rgba(0,0,0,.64); border: 1px solid #333; border-radius: 16px; padding: 12px; }
-.statCard span { display: block; color: #aaa; font-size: 12px; margin-bottom: 5px; }
-.statCard b { color: #facc15; font-size: 25px; }
-.mainArea { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 1fr 390px; gap: 12px; }
-.clickZone { min-height: 580px; position: relative; overflow: hidden; border: 1px solid #333; border-radius: 24px; background: #0d0d0d; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; -webkit-tap-highlight-color: rgba(0,0,0,0) !important; touch-action: manipulation; }
-.simpleBack { position: absolute; inset: 0; background: radial-gradient(circle at 50% 42%, rgba(250,204,21,.12), transparent 38%), linear-gradient(180deg, #1b1b1b, #070707); pointer-events: none; }
-.adminWrap { position: relative; z-index: 3; width: 320px; height: 420px; display: flex; align-items: center; justify-content: center; }
-.adminButton { width: 310px; height: 410px; border: 0; background: transparent !important; cursor: pointer; transition: transform .08s ease; padding: 0; outline: none !important; -webkit-tap-highlight-color: rgba(0,0,0,0) !important; user-select: none !important; -webkit-user-select: none !important; -webkit-touch-callout: none !important; -webkit-user-drag: none !important; -webkit-appearance: none; appearance: none; display: block; touch-action: none; caret-color: transparent; pointer-events: none; }
-.adminButton:active { transform: scale(.96); }
-.adminButton.hit .adminFigure { animation: adminTap .26s ease; }
-@keyframes adminTap { 0% { transform: scale(1) rotate(0deg); } 25% { transform: scale(.91) rotate(-2deg); } 55% { transform: scale(1.06) rotate(2deg); } 100% { transform: scale(1) rotate(0deg); } }
-.adminFigure { width: 100%; height: 100%; position: relative; filter: drop-shadow(0 28px 65px rgba(0,0,0,.9)); }
-.adminGlow { position: absolute; left: 50%; top: 43%; width: 320px; height: 320px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(250,204,21,.14), transparent 64%); filter: blur(10px); }
-.adminBody { position: absolute; left: 50%; bottom: 12px; width: 252px; height: 286px; transform: translateX(-50%); background: radial-gradient(circle at 45% 18%, rgba(255,255,255,.075), transparent 28%), linear-gradient(180deg, #1d1d1d, #070707); border-radius: 44px 44px 25px 25px; z-index: 1; box-shadow: inset -25px 0 35px rgba(0,0,0,.6); }
-.adminShoulder { position: absolute; top: 212px; width: 88px; height: 180px; background: linear-gradient(180deg, #151515, #050505); border-radius: 45px; z-index: 2; }
-.adminShoulder.left { left: 17px; transform: rotate(11deg); }
-.adminShoulder.right { right: 17px; transform: rotate(-11deg); }
-.adminHoodOuter { position: absolute; top: 2px; left: 50%; width: 215px; height: 228px; transform: translateX(-50%); background: radial-gradient(circle at 45% 20%, rgba(255,255,255,.08), transparent 24%), linear-gradient(180deg, #2a2a2a, #050505); border-radius: 50% 50% 44% 44%; z-index: 5; }
-.adminHoodRim { position: absolute; top: 45px; left: 50%; width: 170px; height: 182px; transform: translateX(-50%); background: linear-gradient(180deg, #080808, #000); border-radius: 48% 48% 50% 50%; z-index: 6; box-shadow: 0 0 0 12px rgba(20,20,20,.75), inset 0 0 35px #000; }
-.adminFaceShadow { position: absolute; top: 80px; left: 50%; width: 130px; height: 110px; transform: translateX(-50%); background: #000; border-radius: 45% 45% 52% 52%; z-index: 7; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: visible; }
-.faceEyes { display: flex; justify-content: center; gap: 22px; margin-bottom: 14px; z-index: 3; }
-.eye { display: block; width: 12px; height: 12px; border-radius: 50%; background: #facc15; box-shadow: 0 0 10px rgba(250,204,21,.65); transition: all .18s ease; }
-.faceMouth { width: 26px; height: 10px; border-bottom: 3px solid #facc15; border-radius: 0 0 18px 18px; transition: all .18s ease; z-index: 3; }
-.adminFaceShadow.normal .eye { width: 12px; height: 12px; border-radius: 50%; }
-.adminFaceShadow.normal .faceMouth { width: 24px; height: 10px; border-bottom: 3px solid #facc15; border-radius: 0 0 18px 18px; }
-.adminFaceShadow.happy .eye { width: 12px; height: 6px; border-radius: 0 0 10px 10px; }
-.adminFaceShadow.happy .faceMouth { width: 34px; height: 14px; border-bottom: 4px solid #facc15; border-radius: 0 0 24px 24px; }
-.adminFaceShadow.angry .eye.left { transform: rotate(18deg); height: 4px; border-radius: 10px; }
-.adminFaceShadow.angry .eye.right { transform: rotate(-18deg); height: 4px; border-radius: 10px; }
-.adminFaceShadow.angry .faceMouth { width: 22px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; }
-.adminFaceShadow.evil .eye.left { transform: rotate(22deg); width: 14px; height: 4px; border-radius: 10px; box-shadow: 0 0 14px rgba(250,204,21,.9); }
-.adminFaceShadow.evil .eye.right { transform: rotate(-22deg); width: 14px; height: 4px; border-radius: 10px; box-shadow: 0 0 14px rgba(250,204,21,.9); }
-.adminFaceShadow.evil .faceMouth { width: 28px; height: 8px; border-bottom: 3px solid #facc15; border-radius: 0 0 18px 6px; transform: rotate(-6deg); }
-.adminFaceShadow.surprised .eye { width: 14px; height: 14px; }
-.adminFaceShadow.surprised .faceMouth { width: 12px; height: 12px; border: 3px solid #facc15; border-radius: 50%; }
-.adminFaceShadow.tired .eye { height: 3px; border-radius: 10px; opacity: .9; }
-.adminFaceShadow.tired .faceMouth { width: 18px; height: 0; border-bottom: 2px solid #facc15; border-radius: 0; opacity: .8; }
-.adminFaceShadow.blink .eye { height: 3px; border-radius: 10px; }
-.adminFaceShadow.blink .faceMouth { width: 24px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; }
-.adminFaceShadow.smirk .eye.left { width: 11px; height: 11px; }
-.adminFaceShadow.smirk .eye.right { width: 11px; height: 5px; border-radius: 10px; }
-.adminFaceShadow.smirk .faceMouth { width: 28px; height: 10px; border-bottom: 3px solid #facc15; border-radius: 0 0 20px 8px; transform: rotate(8deg); }
-.adminFaceShadow.steam .eye.left { transform: rotate(16deg); height: 4px; border-radius: 10px; }
-.adminFaceShadow.steam .eye.right { transform: rotate(-16deg); height: 4px; border-radius: 10px; }
-.adminFaceShadow.steam .faceMouth { width: 24px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; }
-.adminFaceShadow.lightning .eye, .adminFaceShadow.shock .eye { width: 14px; height: 14px; box-shadow: 0 0 18px rgba(250,204,21,1); }
-.adminFaceShadow.lightning .faceMouth { width: 18px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; }
-.adminFaceShadow.shock .faceMouth { width: 14px; height: 14px; border: 3px solid #facc15; border-radius: 50%; }
-.adminFaceShadow.dizzy .eye.left, .adminFaceShadow.dizzy .eye.right { background: transparent; width: 14px; height: 14px; border: 2px solid #facc15; border-radius: 50%; box-shadow: 0 0 10px rgba(250,204,21,.65); }
-.adminFaceShadow.dizzy .eye.left:after, .adminFaceShadow.dizzy .eye.right:after { content: ""; display: block; width: 6px; height: 6px; margin: 2px; background: #facc15; border-radius: 50%; }
-.adminFaceShadow.dizzy .faceMouth { width: 26px; height: 0; border-bottom: 3px solid #facc15; border-radius: 0; transform: rotate(5deg); }
-.steamWrap { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-.steam { position: absolute; bottom: 72px; width: 14px; height: 26px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.7), rgba(255,255,255,0)); filter: blur(2px); opacity: 0; animation: steamRise 1s ease-out infinite; }
-.steam.s1 { left: 20px; animation-delay: 0s; }
-.steam.s2 { left: 52px; animation-delay: .25s; }
-.steam.s3 { right: 20px; animation-delay: .5s; }
-@keyframes steamRise { 0% { transform: translateY(0) scale(.8); opacity: 0; } 20% { opacity: .7; } 100% { transform: translateY(-28px) scale(1.3); opacity: 0; } }
-.lightningWrap { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
-.lightningBolt { position: absolute; top: 8px; width: 18px; height: 42px; background: #facc15; clip-path: polygon(45% 0%, 100% 0%, 63% 38%, 100% 38%, 35% 100%, 52% 57%, 15% 57%); filter: drop-shadow(0 0 10px rgba(250,204,21,.85)); animation: boltFlash .35s ease-in-out infinite alternate; }
-.lightningBolt.left { left: -10px; transform: rotate(-12deg); }
-.lightningBolt.right { right: -10px; transform: rotate(12deg); }
-@keyframes boltFlash { 0% { opacity: .45; } 100% { opacity: 1; } }
-.adminNeckShadow { position: absolute; left: 50%; top: 177px; width: 90px; height: 65px; transform: translateX(-50%); background: #050505; border-radius: 0 0 35px 35px; z-index: 4; }
-.adminLogo { position: absolute; bottom: 135px; left: 50%; transform: translateX(-50%); color: #facc15; font-size: 27px; font-weight: 1000; letter-spacing: 4px; z-index: 8; }
-.adminPocket { position: absolute; bottom: 42px; left: 50%; width: 160px; height: 66px; transform: translateX(-50%); border: 2px solid rgba(255,255,255,.055); border-top: 0; border-radius: 0 0 20px 20px; z-index: 8; }
-.thoughtBubble { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); max-width: 235px; background: #fff8dc; color: #111; padding: 10px 12px; border-radius: 16px; font-size: 13px; font-weight: 900; line-height: 1.2; text-align: center; z-index: 35; box-shadow: 0 8px 25px rgba(0,0,0,.35); animation: bubblePop .18s ease; }
-.thoughtBubble:after { content: ""; position: absolute; bottom: -8px; left: 50%; width: 16px; height: 16px; background: #fff8dc; transform: translateX(-50%) rotate(45deg); }
-@keyframes bubblePop { 0% { opacity: 0; transform: translateX(-50%) scale(.86); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
-.floating { position: absolute; top: 58px; left: 50%; z-index: 25; color: #facc15; font-size: 31px; font-weight: 1000; pointer-events: none; animation: floatUp .65s ease forwards; text-shadow: 0 3px 0 #000; }
-@keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, 20px) scale(.8); } 100% { opacity: 0; transform: translate(-50%, -70px) scale(1.18); } }
-.goldLight { position: absolute; left: -100px; z-index: 20; width: 82px; height: 82px; border: 0; background: transparent; padding: 0; cursor: pointer; animation-name: flyRight; animation-timing-function: linear; animation-fill-mode: forwards; filter: drop-shadow(0 0 24px rgba(250,204,21,.75)); }
-.goldLight.left { left: auto; right: -100px; animation-name: flyLeft; }
-.goldBody { position: absolute; left: 14%; top: 38%; width: 62%; height: 27%; border-radius: 999px; background: linear-gradient(90deg, #7c4a00, #facc15, #fff2a8); box-shadow: inset 0 0 8px rgba(255,255,255,.45); }
-.goldHead { position: absolute; right: 10%; top: 31%; width: 27%; height: 43%; border-radius: 999px; background: #fff2a8; box-shadow: 0 0 28px rgba(250,204,21,.95); }
-.goldBeam { position: absolute; right: -35%; top: 18%; width: 90%; height: 65%; background: radial-gradient(circle, rgba(250,204,21,.48), transparent 68%); filter: blur(5px); }
-.goldLight.left .goldHead { right: auto; left: 10%; }
-.goldLight.left .goldBeam { right: auto; left: -35%; }
-.goldLight span { position: absolute; left: 50%; top: -15px; transform: translateX(-50%); color: #facc15; font-size: 13px; font-weight: 1000; text-shadow: 0 2px 5px #000; }
-@keyframes flyRight { 0% { transform: translateX(0) rotate(-8deg) scale(.9); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateX(calc(100vw + 200px)) rotate(8deg) scale(1.05); opacity: 0; } }
-@keyframes flyLeft { 0% { transform: translateX(0) rotate(8deg) scale(.9); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateX(calc(-100vw - 200px)) rotate(-8deg) scale(1.05); opacity: 0; } }
-.winBox { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 40; width: min(88%, 430px); background: rgba(250,204,21,.97); color: #111; border: 2px solid #fff2a8; border-radius: 22px; padding: 22px 18px; text-align: center; box-shadow: 0 0 60px rgba(250,204,21,.48), 0 24px 70px rgba(0,0,0,.55); animation: winPop .22s ease; }
-.winBox b, .winBox span, .winBox strong { display: block; }
-.winBox b { font-size: 25px; text-transform: uppercase; }
-.winBox span { margin-top: 8px; font-weight: 900; }
-.winBox strong { margin-top: 10px; font-size: 20px; }
-@keyframes winPop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.82); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-.sidePanel { background: rgba(0,0,0,.66); border: 1px solid #333; border-radius: 24px; padding: 12px; min-height: 580px; display: flex; flex-direction: column; gap: 10px; }
-.infoCard, .lastWin { background: #111; border: 1px solid #333; border-radius: 16px; padding: 14px; }
-.infoCard h3 { color: #facc15; margin: 0 0 8px; }
-.infoCard p { color: #bbb; line-height: 1.35; margin: 0; }
-.lastWin span { display: block; color: #aaa; margin-bottom: 5px; }
-.lastWin b { display: block; color: #facc15; }
-.upgradeButton { width: 100%; background: #facc15; color: #111; border: 0; border-radius: 14px; padding: 14px; font-weight: 1000; cursor: pointer; }
-.upgradeButton:disabled { opacity: .45; cursor: not-allowed; }
-.bottomText { max-width: 1180px; margin: 10px auto 0; color: #aaa; text-align: center; font-size: 13px; }
-.bottomText b { color: #facc15; }
-@media (max-width: 900px) {
-  .game { max-width: 460px; margin: 0 auto; }
-  .mainArea { grid-template-columns: 1fr; }
-  .sidePanel { min-height: auto; }
-  .topPanel { padding-right: 0; margin-top: 42px; }
-}
-@media (max-width: 600px) {
-  html, body, #root { min-height: 100dvh; }
-  body { overflow-x: hidden; touch-action: manipulation; }
-  .game { min-height: 100dvh; width: 100%; max-width: 430px; margin: 0 auto; padding: 6px; display: flex; flex-direction: column; overflow-x: hidden; }
-  .rulesOverlay { padding: 8px; align-items: center; overflow: auto; }
-  .rulesModal { width: 100%; max-height: calc(100dvh - 16px); overflow: auto; padding: 14px; border-radius: 16px; }
-  .rulesBadge { font-size: 10px; padding: 5px 8px; margin-bottom: 7px; }
-  .rulesModal h2 { font-size: 20px; margin-bottom: 7px; }
-  .rulesModal p { font-size: 12px; margin-bottom: 9px; }
-  .rulesList { font-size: 11px; gap: 6px; padding: 9px; border-radius: 12px; }
-  .rulesButton { padding: 11px; border-radius: 12px; font-size: 13px; }
-  .adOverlay { padding: 8px; }
-  .adModal { width: 96vw; max-width: 360px; padding: 14px; border-radius: 16px; }
-  .adModal h2 { font-size: 20px; }
-  .adModal p { font-size: 12px; }
-  .adActions { gap: 6px; }
-  .adSite, .adClose { padding: 11px 8px; font-size: 13px; border-radius: 11px; }
-  .prizeCorner { position: absolute; right: 6px; top: 6px; padding: 6px 9px; font-size: 11px; border-radius: 10px; }
-  .topPanel { margin: 34px 0 5px; gap: 6px; padding-right: 0; align-items: flex-start; flex-direction: column-reverse; }
-  .soundPanel { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-  .soundButton { padding: 8px 6px; font-size: 10.5px; border-radius: 10px; }
-  .titleFrame { padding: 8px 10px; border-radius: 13px; }
-  .miniText { font-size: 8px; letter-spacing: 1px; }
-  h1 { font-size: 20px; line-height: .95; max-width: 230px; }
-  .statsGrid { width: 100%; grid-template-columns: repeat(2, 1fr); gap: 5px; margin: 0 0 6px; }
-  .statCard { padding: 7px 5px; border-radius: 11px; min-width: 0; }
-  .statCard span { font-size: 9px; margin-bottom: 2px; white-space: nowrap; }
-  .statCard b { font-size: 14px; }
-  .mainArea { width: 100%; display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; }
-  .clickZone { min-height: 350px; height: 53dvh; max-height: 440px; border-radius: 17px; gap: 0; flex-shrink: 0; }
-  .adminWrap { width: 232px; height: 292px; margin-top: -4px; }
-  .adminButton { width: 224px; height: 292px; }
-  .adminGlow { width: 228px; height: 228px; }
-  .adminBody { width: 180px; height: 196px; bottom: 8px; border-radius: 30px 30px 18px 18px; }
-  .adminShoulder { top: 146px; width: 56px; height: 126px; border-radius: 32px; }
-  .adminShoulder.left { left: 17px; }
-  .adminShoulder.right { right: 17px; }
-  .adminHoodOuter { top: 1px; width: 146px; height: 156px; }
-  .adminHoodRim { top: 30px; width: 116px; height: 126px; box-shadow: 0 0 0 8px rgba(20,20,20,.75), inset 0 0 24px #000; }
-  .adminFaceShadow { top: 54px; width: 88px; height: 76px; }
-  .faceEyes { gap: 14px; margin-bottom: 9px; }
-  .eye { width: 8px; height: 8px; }
-  .faceMouth { width: 18px; height: 7px; border-bottom-width: 2px; }
-  .adminFaceShadow.happy .faceMouth { width: 24px; height: 10px; border-bottom-width: 3px; }
-  .adminFaceShadow.surprised .faceMouth, .adminFaceShadow.shock .faceMouth { width: 10px; height: 10px; border-width: 2px; }
-  .lightningBolt { width: 12px; height: 28px; }
-  .steam { width: 10px; height: 18px; bottom: 50px; }
-  .steam.s1 { left: 13px; }
-  .steam.s2 { left: 38px; }
-  .steam.s3 { right: 13px; }
-  .adminNeckShadow { top: 121px; width: 60px; height: 44px; }
-  .adminLogo { bottom: 92px; font-size: 18px; letter-spacing: 2px; }
-  .adminPocket { bottom: 28px; width: 112px; height: 44px; }
-  .thoughtBubble { max-width: 182px; font-size: 10.5px; padding: 7px 9px; top: -2px; border-radius: 12px; }
-  .floating { top: 36px; font-size: 20px; }
-  .goldLight { width: 60px; height: 60px; }
-  .goldLight span { font-size: 10px; top: -11px; }
-  .winBox { width: 92%; padding: 14px 10px; border-radius: 15px; }
-  .winBox b { font-size: 17px; }
-  .winBox span { font-size: 12px; }
-  .winBox strong { font-size: 15px; }
-  .sidePanel { padding: 0; border: 0; background: transparent; border-radius: 0; min-height: auto; gap: 6px; }
-  .infoCard { display: none; }
-  .lastWin { padding: 8px; border-radius: 11px; font-size: 11px; }
-  .upgradeButton { padding: 11px; border-radius: 12px; font-size: 12px; box-shadow: 0 0 24px rgba(250,204,21,.18); }
-  .bottomText { margin-top: 5px; font-size: 11px; }
-}
-`;
+const css = [
+  "*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}html,body,#root{min-height:100%}body{margin:0;background:#080808;overflow-x:hidden}button,.admin,.admin *{user-select:none;-webkit-user-select:none;outline:none!important;-webkit-tap-highlight-color:transparent!important}",
+  ".game{min-height:100svh;color:white;padding:14px;font-family:Arial,sans-serif;background:radial-gradient(circle at 50% 10%,rgba(250,204,21,.18),transparent 24%),linear-gradient(135deg,#070707,#171717 48%,#050505);position:relative}.prize{position:fixed;right:12px;top:12px;z-index:50;background:rgba(0,0,0,.76);border:1px solid rgba(250,204,21,.45);color:#facc15;padding:9px 12px;border-radius:14px;font-size:14px;font-weight:900}",
+  ".overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px}.adO{z-index:90;background:rgba(0,0,0,.5)}.modal{width:min(94vw,520px);background:linear-gradient(180deg,#181818,#080808);border:1px solid rgba(250,204,21,.42);border-radius:24px;padding:22px;box-shadow:0 0 70px rgba(250,204,21,.18),0 30px 90px rgba(0,0,0,.75)}.adM{width:min(92vw,380px);text-align:center}.badge{display:inline-flex;background:rgba(250,204,21,.15);border:1px solid rgba(250,204,21,.35);color:#facc15;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:1000;margin-bottom:10px}.dark{color:#111;background:#facc15}.modal h2{margin:0 0 10px;font-size:28px;color:#facc15}.modal p{color:#ddd;line-height:1.35;margin:0 0 14px}.modal button,.upgrade,.achBtn,.adBtns button{width:100%;background:#facc15;color:#111;border:0;border-radius:14px;padding:14px;font-weight:1000;cursor:pointer}.adBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.adBtns .ghost{background:#181818;color:#facc15;border:1px solid rgba(250,204,21,.35)}",
+  ".top{max-width:1180px;margin:0 auto 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-right:125px}.sound{display:flex;gap:6px;flex-wrap:wrap}.sound button{background:rgba(0,0,0,.72);color:#facc15;border:1px solid rgba(250,204,21,.38);border-radius:12px;padding:9px 10px;font-size:12px;font-weight:1000}.title{display:inline-flex;flex-direction:column;gap:4px;padding:10px 14px;border:2px solid #facc15;border-radius:16px;background:rgba(20,20,20,.86);box-shadow:0 0 28px rgba(250,204,21,.18)}.title span{color:#facc15;font-size:12px;font-weight:900;letter-spacing:2px}h1{margin:0;font-size:36px;line-height:1;text-transform:uppercase}",
+  ".stats{max-width:1180px;margin:0 auto 12px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat,.info{background:rgba(0,0,0,.64);border:1px solid #333;border-radius:16px;padding:12px}.stat span{display:block;color:#aaa;font-size:12px;margin-bottom:5px}.stat b{color:#facc15;font-size:25px}.main{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr 390px;gap:12px}.side{background:rgba(0,0,0,.66);border:1px solid #333;border-radius:24px;padding:12px;min-height:580px;display:flex;flex-direction:column;gap:10px}.info h3{color:#facc15;margin:0 0 8px}.info p{color:#bbb;line-height:1.35;margin:0}.upgrade:disabled{opacity:.45}.achBtn{background:#111;color:#facc15;border:1px solid rgba(250,204,21,.45)}",
+  ".zone{min-height:580px;position:relative;overflow:hidden;border:1px solid #333;border-radius:24px;background:#0d0d0d;display:flex;align-items:center;justify-content:center}.back{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(250,204,21,.12),transparent 38%),linear-gradient(180deg,#1b1b1b,#070707);pointer-events:none}.adminWrap{position:relative;z-index:3;width:320px;height:420px;display:flex;align-items:center;justify-content:center}.admin{width:310px;height:410px;pointer-events:none}.admin.hit .figure{animation:tap .26s ease}@keyframes tap{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(.91) rotate(-2deg)}55%{transform:scale(1.06) rotate(2deg)}}",
+  ".figure{width:100%;height:100%;position:relative;filter:drop-shadow(0 28px 65px rgba(0,0,0,.9))}.glow{position:absolute;left:50%;top:43%;width:320px;height:320px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(250,204,21,.14),transparent 64%);filter:blur(10px)}.body{position:absolute;left:50%;bottom:12px;width:252px;height:286px;transform:translateX(-50%);background:linear-gradient(180deg,#1d1d1d,#070707);border-radius:44px 44px 25px 25px;z-index:1}.shoulder{position:absolute;top:212px;width:88px;height:180px;background:linear-gradient(180deg,#151515,#050505);border-radius:45px;z-index:2}.shoulder.l{left:17px;transform:rotate(11deg)}.shoulder.r{right:17px;transform:rotate(-11deg)}.hood{position:absolute;top:2px;left:50%;width:215px;height:228px;transform:translateX(-50%);background:linear-gradient(180deg,#2a2a2a,#050505);border-radius:50% 50% 44% 44%;z-index:5}.rim{position:absolute;top:45px;left:50%;width:170px;height:182px;transform:translateX(-50%);background:linear-gradient(180deg,#080808,#000);border-radius:48% 48% 50% 50%;z-index:6;box-shadow:0 0 0 12px rgba(20,20,20,.75),inset 0 0 35px #000}",
+  ".face{position:absolute;top:80px;left:50%;width:130px;height:110px;transform:translateX(-50%);background:#000;border-radius:45% 45% 52% 52%;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:visible}.eyes{display:flex;gap:22px;margin-bottom:14px;z-index:3}.eyes i{display:block;width:12px;height:12px;border-radius:50%;background:#facc15;box-shadow:0 0 10px rgba(250,204,21,.65);transition:.18s}.mouth{width:26px;height:10px;border-bottom:3px solid #facc15;border-radius:0 0 18px 18px;transition:.18s;z-index:3}.happy .eyes i{height:6px;border-radius:0 0 10px 10px}.happy .mouth{width:34px;height:14px;border-bottom-width:4px}.angry .eyes i,.steam .eyes i,.evil .eyes i{height:4px;border-radius:10px}.angry .eyes i:first-child,.steam .eyes i:first-child,.evil .eyes i:first-child{transform:rotate(20deg)}.angry .eyes i:last-child,.steam .eyes i:last-child,.evil .eyes i:last-child{transform:rotate(-20deg)}.angry .mouth,.steam .mouth,.lightning .mouth{height:0;border-radius:0}.surprised .mouth,.shock .mouth{width:12px;height:12px;border:3px solid #facc15;border-radius:50%}.tired .eyes i,.blink .eyes i{height:3px;border-radius:10px}.smirk .eyes i:last-child{height:5px}.smirk .mouth{transform:rotate(8deg)}",
+  ".steam{position:absolute;inset:0;pointer-events:none;z-index:1}.steam span{position:absolute;bottom:72px;width:14px;height:26px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0));filter:blur(2px);opacity:0;animation:steam 1s ease-out infinite}.steam span:nth-child(1){left:20px}.steam span:nth-child(2){left:52px;animation-delay:.25s}.steam span:nth-child(3){right:20px;animation-delay:.5s}@keyframes steam{20%{opacity:.7}100%{transform:translateY(-28px) scale(1.3);opacity:0}}.bolt{position:absolute;inset:0;pointer-events:none}.bolt span{position:absolute;top:8px;width:18px;height:42px;background:#facc15;clip-path:polygon(45% 0,100% 0,63% 38%,100% 38%,35% 100%,52% 57%,15% 57%);filter:drop-shadow(0 0 10px rgba(250,204,21,.85));animation:flash .35s infinite alternate}.bolt span:first-child{left:-10px;transform:rotate(-12deg)}.bolt span:last-child{right:-10px;transform:rotate(12deg)}@keyframes flash{0%{opacity:.45}100%{opacity:1}}.neck{position:absolute;left:50%;top:177px;width:90px;height:65px;transform:translateX(-50%);background:#050505;border-radius:0 0 35px 35px;z-index:4}.logo{position:absolute;bottom:135px;left:50%;transform:translateX(-50%);color:#facc15;font-size:27px;font-weight:1000;letter-spacing:4px;z-index:8}.pocket{position:absolute;bottom:42px;left:50%;width:160px;height:66px;transform:translateX(-50%);border:2px solid rgba(255,255,255,.055);border-top:0;border-radius:0 0 20px 20px;z-index:8}",
+  ".bubble{position:absolute;top:8px;left:50%;transform:translateX(-50%);max-width:235px;background:#fff8dc;color:#111;padding:10px 12px;border-radius:16px;font-size:13px;font-weight:900;text-align:center;z-index:35}.float{position:absolute;top:58px;left:50%;z-index:25;color:#facc15;font-size:31px;font-weight:1000;pointer-events:none;animation:float .65s ease forwards;text-shadow:0 3px 0 #000}@keyframes float{100%{opacity:0;transform:translate(-50%,-70px) scale(1.18)}}",
+  ".gold{position:absolute;left:-100px;z-index:20;width:82px;height:82px;border:0;background:transparent;padding:0;cursor:pointer;animation:flyR linear forwards;filter:drop-shadow(0 0 24px rgba(250,204,21,.75))}.gold.left{left:auto;right:-100px;animation-name:flyL}.gold i{position:absolute;left:14%;top:38%;width:62%;height:27%;border-radius:999px;background:linear-gradient(90deg,#7c4a00,#facc15,#fff2a8)}.gold b{position:absolute;right:10%;top:31%;width:27%;height:43%;border-radius:999px;background:#fff2a8;box-shadow:0 0 28px rgba(250,204,21,.95)}.gold.left b{right:auto;left:10%}.gold span{position:absolute;left:50%;top:-15px;transform:translateX(-50%);color:#facc15;font-size:13px;font-weight:1000}@keyframes flyR{100%{transform:translateX(calc(100vw + 200px));opacity:0}}@keyframes flyL{100%{transform:translateX(calc(-100vw - 200px));opacity:0}}",
+  ".cookie{position:absolute;top:-90px;z-index:28;width:70px;height:54px;cursor:pointer;border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff0b4,#d69535 64%,#8b4f12);box-shadow:inset -8px -10px 16px rgba(0,0,0,.22),0 14px 25px rgba(0,0,0,.35);animation:fall linear forwards;color:#2b1604;font-weight:1000;font-size:24px;display:flex;align-items:center;justify-content:center}.cookie i{position:absolute;left:32px;top:7px;width:4px;height:43px;background:rgba(78,38,10,.55)}@keyframes fall{100%{top:calc(100% + 100px);opacity:0;transform:rotate(24deg)}}.fortune,.win{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:45;width:min(88%,410px);border-radius:20px;padding:18px;text-align:center;box-shadow:0 25px 65px rgba(0,0,0,.58);cursor:pointer}.fortune{background:linear-gradient(180deg,#fff7d7,#f1d590);color:#1a1202;border:2px solid #facc15}.fortune b{display:inline-flex;margin-bottom:10px;padding:5px 9px;border-radius:999px;background:#1a1202;color:#facc15;font-size:11px;text-transform:uppercase}.fortune p{margin:0;font-size:20px;line-height:1.25;font-weight:900}.fortune small{display:block;margin-top:10px;color:rgba(26,18,2,.65);font-weight:900}.win{background:rgba(250,204,21,.97);color:#111;border:2px solid #fff2a8}.win b,.win span,.win strong{display:block}.win b{font-size:25px;text-transform:uppercase}.win strong{margin-top:10px;font-size:20px}",
+  ".rulesList{display:flex;flex-direction:column;gap:8px;color:#ddd;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px;margin-bottom:14px}.rulesList b{color:#facc15}.achModal{width:min(94vw,640px)}.achList{display:grid;gap:10px;max-height:46vh;overflow:auto;margin:0 0 14px}.ach{background:linear-gradient(180deg,#151515,#0b0b0b);border:1px solid #333;border-radius:16px;padding:12px;display:grid;gap:8px}.ach.open{border-color:rgba(250,204,21,.78);box-shadow:0 0 20px rgba(250,204,21,.12)}.ach.lock{opacity:.74}.achHead{display:flex;gap:12px;align-items:flex-start}.achIcon{width:54px;height:54px;min-width:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000}.achIcon.open{background:radial-gradient(circle at 35% 25%,#fff4a8,#facc15 55%,#b97900);color:#111;box-shadow:0 0 22px rgba(250,204,21,.28),inset 0 -8px 14px rgba(0,0,0,.18)}.achIcon.lock{background:linear-gradient(180deg,#2a2a2a,#111);color:#777;border:1px solid #3a3a3a}.achText{display:grid;gap:4px}.ach b{color:#facc15}.ach span,.ach small{color:#aaa}.ach em{font-style:normal;color:#111;background:#facc15;border-radius:10px;padding:7px 9px;font-weight:1000}.ach.lock em{background:#222;color:#888}.ach i{display:block;height:8px;background:#222;border-radius:999px;overflow:hidden}.ach i u{display:block;height:100%;background:linear-gradient(90deg,#facc15,#ffe58a)}",
+  ".achToast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:120;width:min(92vw,420px);display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,#181818,#090909);border:1px solid rgba(250,204,21,.75);border-radius:18px;padding:12px;box-shadow:0 0 34px rgba(250,204,21,.25),0 18px 50px rgba(0,0,0,.6);animation:toastIn .25s ease}.achToastIcon{width:54px;height:54px;min-width:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fff4a8,#facc15 55%,#b97900);color:#111;font-size:27px;font-weight:1000;box-shadow:0 0 22px rgba(250,204,21,.28)}.achToast div:last-child{display:grid;gap:3px}.achToast b{color:#facc15;font-size:15px}.achToast span{font-size:14px;font-weight:900}.achToast em{font-style:normal;color:#111;background:#facc15;border-radius:9px;padding:5px 8px;font-size:12px;font-weight:1000}@keyframes toastIn{0%{opacity:0;transform:translateX(-50%) translateY(-18px) scale(.94)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}",
+  ".bottom{max-width:1180px;margin:10px auto 0;color:#aaa;text-align:center;font-size:13px}.bottom b{color:#facc15}@media(max-width:900px){.game{max-width:460px;margin:0 auto}.main{grid-template-columns:1fr}.side{min-height:auto}.top{padding-right:0;margin-top:42px}}",
+  "@media(max-width:600px){.game{min-height:100dvh;width:100%;max-width:430px;margin:0 auto;padding:6px;display:flex;flex-direction:column}.prize{position:absolute;right:6px;top:6px;padding:6px 9px;font-size:11px}.overlay{padding:8px}.modal{width:100%;max-height:calc(100dvh - 16px);overflow:auto;padding:14px;border-radius:16px}.modal h2{font-size:20px}.modal p{font-size:12px}.top{margin:34px 0 5px;gap:6px;flex-direction:column-reverse}.sound{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px}.sound button{padding:8px 6px;font-size:10.5px}.title{padding:8px 10px}.title span{font-size:8px}h1{font-size:20px}.stats{width:100%;gap:5px;margin:0 0 6px}.stat{padding:7px 5px}.stat span{font-size:9px}.stat b{font-size:14px}.main{display:flex;flex-direction:column;gap:6px;flex:1}.zone{min-height:350px;height:53dvh;max-height:440px;border-radius:17px}.side{padding:0;border:0;background:transparent;border-radius:0;gap:6px}.info{display:none}.upgrade,.achBtn{padding:11px;font-size:12px}.adminWrap{width:232px;height:292px;margin-top:-4px}.admin{width:224px;height:292px}.glow{width:228px;height:228px}.body{width:180px;height:196px;bottom:8px}.shoulder{top:146px;width:56px;height:126px}.hood{width:146px;height:156px}.rim{top:30px;width:116px;height:126px}.face{top:54px;width:88px;height:76px}.eyes{gap:14px;margin-bottom:9px}.eyes i{width:8px;height:8px}.mouth{width:18px;height:7px;border-bottom-width:2px}.neck{top:121px;width:60px;height:44px}.logo{bottom:92px;font-size:18px;letter-spacing:2px}.pocket{bottom:28px;width:112px;height:44px}.bubble{max-width:182px;font-size:10.5px;padding:7px 9px;top:-2px}.float{top:36px;font-size:20px}.gold{width:60px;height:60px}.cookie{width:52px;height:40px;font-size:18px}.fortune,.win{width:90%;padding:13px;border-radius:15px}.fortune p{font-size:15px}.win b{font-size:17px}.win strong{font-size:15px}.achToast{top:48px;width:94vw;padding:10px}.achToastIcon{width:46px;height:46px;min-width:46px;font-size:22px}.bottom{margin-top:5px;font-size:11px}}",
+].join("\n");
