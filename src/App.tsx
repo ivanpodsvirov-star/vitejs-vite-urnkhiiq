@@ -1,8 +1,15 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const SAVE_KEY = "poklikai_admin_edc27_v9_achievements";
+const SAVE_KEY = "poklikai_admin_edc27_v10_chance_each_click";
 const PLAYER_ID_KEY = "poklikai_admin_player_id_v1";
+
+const BASE_CHANCE = 0.36;
+const UPGRADE_CHANCE = 0.05;
+const HOURLY_BONUS_CHANCE = 0.01;
+const MAX_CHANCE = 1.5;
+const START_UPGRADE_COST = 350;
+const COST_GROWTH = 1.3;
 
 const ADMIN_LINES = [
   "клик принят",
@@ -76,8 +83,13 @@ const num = (n: number) =>
     ? (n / 1000).toFixed(1) + "K"
     : String(Math.floor(n || 0));
 
-const chance = (g: any) => Math.min(0.01 + g.chanceLevel * 0.01 + g.hourlyBoost * 0.01, 1.5);
-const cost = (lvl: number) => Math.floor(350 * Math.pow(1.8, lvl));
+const chance = (g: any) =>
+  Math.min(
+    BASE_CHANCE + g.chanceLevel * UPGRADE_CHANCE + g.hourlyBoost * HOURLY_BONUS_CHANCE,
+    MAX_CHANCE
+  );
+
+const cost = (lvl: number) => Math.floor(START_UPGRADE_COST * Math.pow(COST_GROWTH, lvl));
 const makeId = () => window.crypto?.randomUUID?.() || "guest_" + Date.now();
 
 function withHourlyBonus(g: any) {
@@ -229,13 +241,13 @@ export default function App() {
 
     const t = setInterval(() => {
       setAd((old: any) => {
-        if (old || gold) return old;
+        if (old || gold || cookie || fortune) return old;
         return rnd(ADS);
       });
     }, 60000);
 
     return () => clearInterval(t);
-  }, [rules, gold]);
+  }, [rules, gold, cookie, fortune]);
 
   function openAd() {
     const link = ad?.[3] || ADS[0][3];
@@ -245,8 +257,12 @@ export default function App() {
 
     setTimeout(() => {
       try {
-        if (tg?.openLink) tg.openLink(link, { try_instant_view: false });
-        else window.open(link, "_blank", "noopener,noreferrer") || (window.location.href = link);
+        if (tg?.openLink) {
+          tg.openLink(link, { try_instant_view: false });
+        } else {
+          const opened = window.open(link, "_blank", "noopener,noreferrer");
+          if (!opened) window.location.href = link;
+        }
       } catch {
         window.location.href = link;
       }
@@ -254,7 +270,7 @@ export default function App() {
   }
 
   function spawnGold() {
-    if (gold || ad || rules) return;
+    if (gold || ad || rules || cookie || fortune) return;
 
     const id = Date.now() + Math.random();
 
@@ -270,7 +286,7 @@ export default function App() {
   }
 
   function spawnCookie() {
-    if (cookie || fortune || ad || rules) return;
+    if (cookie || fortune || ad || rules || gold) return;
 
     const id = Date.now() + Math.random();
 
@@ -336,14 +352,14 @@ export default function App() {
     setGame((g) => {
       const n = g.totalClicks + 1;
 
+      if (Math.random() * 100 <= chance(g)) {
+        setTimeout(spawnGold, 0);
+      }
+
       if (n % 10 === 0) {
         setHit(false);
         setTimeout(() => setHit(true), 0);
         setTimeout(() => setHit(false), 280);
-
-        if (Math.random() * 100 <= chance(g)) {
-          setTimeout(spawnGold, 0);
-        }
       }
 
       if (n % 5 === 0) {
@@ -398,7 +414,7 @@ export default function App() {
   }
 
   function upgrade() {
-    if (game.coins < upCost || curChance >= 1.5) return;
+    if (game.coins < upCost || curChance >= MAX_CHANCE) return;
 
     beep(520, 0.08, 0.03, "triangle");
 
@@ -408,7 +424,7 @@ export default function App() {
       chanceLevel: g.chanceLevel + 1,
     }));
 
-    addFloat("шанс +");
+    addFloat("шанс +0,05%");
   }
 
   return (
@@ -558,7 +574,7 @@ export default function App() {
             <div className="win">
               <b>Победа!</b>
               <span>Ты поймал золотой фонарь</span>
-              <strong>Приз: Nitecore EDC27</strong>
+              <strong>Приз: лимитированный Nitecore EDC27</strong>
             </div>
           )}
 
@@ -585,8 +601,10 @@ export default function App() {
             Достижения: {achDone}/{ACHIEVEMENTS.length}
           </button>
 
-          <button className="upgrade" disabled={game.coins < upCost || curChance >= 1.5} onClick={upgrade}>
-            {curChance >= 1.5 ? "Максимальный шанс" : "Увеличить шанс за " + num(upCost) + " монет"}
+          <button className="upgrade" disabled={game.coins < upCost || curChance >= MAX_CHANCE} onClick={upgrade}>
+            {curChance >= MAX_CHANCE
+              ? "Максимальный шанс"
+              : "Шанс " + curChance.toFixed(2) + "% - улучшить за " + num(upCost)}
           </button>
 
           {game.wins > 0 && (
