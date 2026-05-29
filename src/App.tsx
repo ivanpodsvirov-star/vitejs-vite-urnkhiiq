@@ -1,13 +1,13 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const SAVE_KEY = "poklikai_admin_edc27_v12_gold_12000";
+const SAVE_KEY = "poklikai_admin_edc27_v13_gold_120000";
 const PLAYER_ID_KEY = "poklikai_admin_player_id_v1";
 
-const BASE_CHANCE = 100 / 12000;
-const UPGRADE_CHANCE = 0.001;
-const HOURLY_BONUS_CHANCE = 0.0002;
-const MAX_CHANCE = 0.05;
+const BASE_CHANCE = 100 / 120000;
+const UPGRADE_CHANCE = 0.0001;
+const HOURLY_BONUS_CHANCE = 0.00002;
+const MAX_CHANCE = 0.005;
 const START_UPGRADE_COST = 1200;
 const COST_GROWTH = 1.45;
 
