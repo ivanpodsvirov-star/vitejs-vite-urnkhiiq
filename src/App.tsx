@@ -1,15 +1,15 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const SAVE_KEY = "poklikai_admin_edc27_v11_roulette_1000";
+const SAVE_KEY = "poklikai_admin_edc27_v12_gold_12000";
 const PLAYER_ID_KEY = "poklikai_admin_player_id_v1";
 
-const BASE_CHANCE = 0.1;
-const UPGRADE_CHANCE = 0.05;
-const HOURLY_BONUS_CHANCE = 0.01;
-const MAX_CHANCE = 1.5;
-const START_UPGRADE_COST = 350;
-const COST_GROWTH = 1.3;
+const BASE_CHANCE = 100 / 12000;
+const UPGRADE_CHANCE = 0.001;
+const HOURLY_BONUS_CHANCE = 0.0002;
+const MAX_CHANCE = 0.05;
+const START_UPGRADE_COST = 1200;
+const COST_GROWTH = 1.45;
 
 const ROULETTE_SYMBOLS = ["🔦", "⚡", "🔋", "💡", "⭐"];
 
@@ -18,7 +18,7 @@ const ADMIN_LINES = [
   "не жми так яростно",
   "турбо не навсегда",
   "я все вижу из-под капюшона",
-  "шанс растет",
+  "удача любит терпеливых",
   "люменов много не бывает",
   "официальный админ на месте",
   "палец работает на ROI",
@@ -49,6 +49,12 @@ const FORTUNES = [
   "Твой приз может быть ближе, чем кажется.",
   "Сегодня лучше сделать еще один клик.",
   "Будущий победитель не закрывает игру слишком рано.",
+  "Иногда самый важный клик выглядит обычным.",
+  "Фонарь не спешит, но он уже где-то в игре.",
+  "Скоро терпение может стать твоим главным преимуществом.",
+  "Если экран потемнел, значит свет будет заметнее.",
+  "Админ молчит, но рандом уже думает.",
+  "Сделай паузу, но не сдавайся.",
 ];
 
 const ADS = [
@@ -108,7 +114,6 @@ const chance = (g: any) =>
   );
 
 const cost = (lvl: number) => Math.floor(START_UPGRADE_COST * Math.pow(COST_GROWTH, lvl));
-
 const makeId = () => window.crypto?.randomUUID?.() || "guest_" + Date.now();
 
 function withHourlyBonus(g: any) {
@@ -534,7 +539,7 @@ export default function App() {
 
             <div className="rulesList">
               <div><b>1.</b> Кликайте по админу и копите монеты.</div>
-              <div><b>2.</b> Улучшайте удачу.</div>
+              <div><b>2.</b> Улучшайте удачу и возвращайтесь в игру каждый день.</div>
               <div><b>3.</b> Когда появится золотой фонарь, нажмите на него.</div>
               <div><b>4.</b> Сделайте скриншот победы и отправьте его в комментарии.</div>
             </div>
