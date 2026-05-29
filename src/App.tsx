@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const SAVE_KEY = "poklikai_admin_edc27_v13_gold_120000";
+const SAVE_KEY = "poklikai_admin_secret_keychain_v14";
 const PLAYER_ID_KEY = "poklikai_admin_player_id_v1";
 
 const BASE_CHANCE = 100 / 120000;
@@ -29,16 +29,16 @@ const FORTUNES = [
   "В ближайшей темноте тебе понадобится надежный свет.",
   "Следующий удачный клик может быть ближе, чем кажется.",
   "Сегодня шанс улыбается тем, кто не сдается.",
-  "Твой будущий EDC уже где-то рядом.",
+  "Твой будущий приз уже где-то рядом.",
   "Скоро один маленький луч решит большую проблему.",
   "Впереди темный участок, но ты будешь готов.",
-  "Фонарь появится тогда, когда ты меньше всего ждешь.",
+  "Приз появится тогда, когда ты меньше всего ждешь.",
   "Будущий победитель обычно делает еще один клик.",
   "Свет уже ищет тебя. Осталось не пропустить момент.",
   "Через несколько кликов ты можешь пожалеть, что остановился.",
   "Темнота впереди, но у тебя будет преимущество.",
   "Сегодня случайность работает не против тебя.",
-  "Золотой фонарь любит терпеливых.",
+  "Призовой наключник любит терпеливых.",
   "Скоро экран может показать то, ради чего ты здесь.",
   "Каждый клик приближает момент, который нельзя пропустить.",
   "В будущем тебя ждет яркая находка.",
@@ -50,7 +50,7 @@ const FORTUNES = [
   "Сегодня лучше сделать еще один клик.",
   "Будущий победитель не закрывает игру слишком рано.",
   "Иногда самый важный клик выглядит обычным.",
-  "Фонарь не спешит, но он уже где-то в игре.",
+  "Приз не спешит, но он уже где-то в игре.",
   "Скоро терпение может стать твоим главным преимуществом.",
   "Если экран потемнел, значит свет будет заметнее.",
   "Админ молчит, но рандом уже думает.",
@@ -58,11 +58,36 @@ const FORTUNES = [
 ];
 
 const ADS = [
-  ["EDC35", "Мощный плоский EDC-фонарь для города, машины и ежедневного набора.", "EDC-фонарь", "https://nitecore.ru/catalog/fonari/edc35-/"],
-  ["EDC09", "Компактный фонарь на каждый день. Быстро достать, удобно носить.", "Компактный EDC", "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc09/"],
-  ["EDC17", "Карманный фонарь для тех, кто любит быть готовым к темноте заранее.", "На каждый день", "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc17/"],
-  ["TIP SE Black", "Мини-фонарь на ключи. Маленький формат, быстрый доступ к свету.", "Наключный фонарь", "https://nitecore.ru/catalog/fonari/tip-se-black/"],
-  ["CARBO 10000", "Пауэрбанк для телефона, фонаря и другой техники, когда розетка далеко.", "Питание", "https://nitecore.ru/catalog/istochniki-pitaniya/power-bank/carbo-10000-/"],
+  [
+    "EDC35",
+    "Мощный плоский EDC-фонарь для города, машины и ежедневного набора.",
+    "EDC-фонарь",
+    "https://nitecore.ru/catalog/fonari/edc35-/",
+  ],
+  [
+    "EDC09",
+    "Компактный фонарь на каждый день. Быстро достать, удобно носить.",
+    "Компактный EDC",
+    "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc09/",
+  ],
+  [
+    "EDC17",
+    "Карманный фонарь для тех, кто любит быть готовым к темноте заранее.",
+    "На каждый день",
+    "https://nitecore.ru/catalog/fonari/ruchnye-fonari/edc-fonari-dlya-issledovateley-i-puteshestvennikov/edc17/",
+  ],
+  [
+    "TIP SE Black",
+    "Мини-фонарь на ключи. Маленький формат, быстрый доступ к свету.",
+    "Наключный фонарь",
+    "https://nitecore.ru/catalog/fonari/tip-se-black/",
+  ],
+  [
+    "CARBO 10000",
+    "Пауэрбанк для телефона, фонаря и другой техники, когда розетка далеко.",
+    "Питание",
+    "https://nitecore.ru/catalog/istochniki-pitaniya/power-bank/carbo-10000-/",
+  ],
 ];
 
 const ACHIEVEMENTS = [
@@ -94,6 +119,7 @@ const defaultGame = {
   lastHourlyVisit: 0,
   wins: 0,
   lastWinAt: 0,
+  lastSecretPrize: "",
   rouletteDone: false,
   rouletteWin: false,
 };
@@ -142,11 +168,12 @@ function Stat({ title, value }: any) {
 export default function App() {
   const [game, setGame] = useState(defaultGame);
   const [player, setPlayer] = useState("Игрок");
-  const [gold, setGold] = useState<any>(null);
+  const [keychain, setKeychain] = useState<any>(null);
   const [cookie, setCookie] = useState<any>(null);
   const [fortune, setFortune] = useState("");
   const [float, setFloat] = useState<any[]>([]);
   const [win, setWin] = useState(false);
+  const [wonPrize, setWonPrize] = useState("");
   const [rules, setRules] = useState(true);
   const [thought, setThought] = useState("");
   const [ad, setAd] = useState<any>(null);
@@ -316,13 +343,13 @@ export default function App() {
 
     const t = setInterval(() => {
       setAd((old: any) => {
-        if (old || gold || cookie || fortune || roulette?.active) return old;
+        if (old || keychain || cookie || fortune || roulette?.active) return old;
         return rnd(ADS);
       });
     }, 60000);
 
     return () => clearInterval(t);
-  }, [rules, gold, cookie, fortune, roulette]);
+  }, [rules, keychain, cookie, fortune, roulette]);
 
   function openAd() {
     const link = ad?.[3] || ADS[0][3];
@@ -344,8 +371,8 @@ export default function App() {
     }, 30);
   }
 
-  function spawnGold() {
-    if (gold || ad || rules || cookie || fortune || roulette?.active) return;
+  function spawnKeychain() {
+    if (keychain || ad || rules || cookie || fortune || roulette?.active) return;
 
     const id = Date.now() + Math.random();
 
@@ -354,14 +381,15 @@ export default function App() {
       top: 70 + Math.random() * 200,
       time: 3.2 + Math.random(),
       dir: Math.random() > 0.5 ? "left" : "right",
+      type: Math.random() > 0.5 ? "secret1" : "secret2",
     };
 
-    setGold(item);
-    setTimeout(() => setGold((g: any) => (g?.id === id ? null : g)), item.time * 1000);
+    setKeychain(item);
+    setTimeout(() => setKeychain((g: any) => (g?.id === id ? null : g)), item.time * 1000);
   }
 
   function spawnCookie() {
-    if (cookie || fortune || ad || rules || gold || roulette?.active) return;
+    if (cookie || fortune || ad || rules || keychain || roulette?.active) return;
 
     const id = Date.now() + Math.random();
 
@@ -390,13 +418,16 @@ export default function App() {
     setFortune("");
   }
 
-  function winGold(e: any) {
+  function winKeychain(e: any) {
     e?.preventDefault?.();
     e?.stopPropagation?.();
 
-    if (!gold) return;
+    if (!keychain) return;
 
-    setGold(null);
+    const prizeName = keychain.type === "secret2" ? "Секретный приз №2" : "Секретный приз №1";
+
+    setWonPrize(prizeName);
+    setKeychain(null);
     setWin(true);
 
     beep(660, 0.08, 0.04);
@@ -406,6 +437,7 @@ export default function App() {
       ...g,
       wins: g.wins + 1,
       lastWinAt: g.totalClicks,
+      lastSecretPrize: prizeName,
     }));
 
     setTimeout(() => setWin(false), 4200);
@@ -433,7 +465,7 @@ export default function App() {
       }
 
       if (!launchRoulette && Math.random() * 100 <= chance(g)) {
-        setTimeout(spawnGold, 0);
+        setTimeout(spawnKeychain, 0);
       }
 
       if (n % 10 === 0) {
@@ -513,7 +545,7 @@ export default function App() {
       <style>{css}</style>
 
       <div className="prize">
-        Приз: <b>EDC27</b>
+        Призы: <b>2 секрета</b>
       </div>
 
       {achToast && (
@@ -531,16 +563,17 @@ export default function App() {
         <div className="overlay">
           <div className="modal">
             <div className="badge">Правила розыгрыша</div>
-            <h2>Поймай золотой фонарь</h2>
+            <h2>Поймай секретный приз</h2>
             <p>
-              Кликайте по админу, поймайте золотой фонарь и отправьте скриншот победы в комментарии.
-              Первый скриншот забирает приз.
+              В конкурсе три приза: Nitecore EDC27 и два секретных приза.
+              Через эту игру можно выиграть только два секретных приза.
+              Поймайте призовой наключник, сделайте скриншот победы и отправьте его в комментарии.
             </p>
 
             <div className="rulesList">
               <div><b>1.</b> Кликайте по админу и копите монеты.</div>
               <div><b>2.</b> Улучшайте удачу и возвращайтесь в игру каждый день.</div>
-              <div><b>3.</b> Когда появится золотой фонарь, нажмите на него.</div>
+              <div><b>3.</b> Когда появится призовой наключник, нажмите на него.</div>
               <div><b>4.</b> Сделайте скриншот победы и отправьте его в комментарии.</div>
             </div>
 
@@ -665,14 +698,15 @@ export default function App() {
         <div className="zone" onPointerDown={pressArea}>
           <div className="back" />
 
-          {gold && (
+          {keychain && (
             <button
-              className={"gold " + gold.dir}
-              style={{ top: gold.top, animationDuration: gold.time + "s" }}
-              onPointerDown={winGold}
+              className={"keychain " + keychain.dir + " " + keychain.type}
+              style={{ top: keychain.top, animationDuration: keychain.time + "s" }}
+              onPointerDown={winKeychain}
             >
               <i />
               <b />
+              <em />
               <span>ЖМИ!</span>
             </button>
           )}
@@ -698,8 +732,9 @@ export default function App() {
           {win && (
             <div className="win">
               <b>Победа!</b>
-              <span>Ты поймал золотой фонарь</span>
-              <strong>Приз: лимитированный Nitecore EDC27</strong>
+              <span>Ты поймал призовой наключник</span>
+              <strong>{wonPrize || "Секретный приз"}</strong>
+              <small>Сделай скриншот и отправь его в комментарии</small>
             </div>
           )}
 
@@ -719,7 +754,7 @@ export default function App() {
         <div className="side">
           <div className="info">
             <h3>Как играть</h3>
-            <p>Поймай золотой фонарь, сделай скриншот победы и отправь его в комментарии.</p>
+            <p>Поймай призовой наключник, сделай скриншот победы и отправь его в комментарии.</p>
           </div>
 
           <button className="achBtn" onClick={() => setAchOpen(true)}>
@@ -742,7 +777,7 @@ export default function App() {
           {game.wins > 0 && (
             <div className="info">
               <span>Последний выигрыш</span>
-              <b>EDC27 на {num(game.lastWinAt)} кликах</b>
+              <b>{game.lastSecretPrize || "Секретный приз"} на {num(game.lastWinAt)} кликах</b>
             </div>
           )}
         </div>
@@ -805,11 +840,11 @@ const css = [
   ".face{position:absolute;top:80px;left:50%;width:130px;height:110px;transform:translateX(-50%);background:#000;border-radius:45% 45% 52% 52%;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:visible}.eyes{display:flex;gap:22px;margin-bottom:14px;z-index:3}.eyes i{display:block;width:12px;height:12px;border-radius:50%;background:#facc15;box-shadow:0 0 10px rgba(250,204,21,.65);transition:.18s}.mouth{width:26px;height:10px;border-bottom:3px solid #facc15;border-radius:0 0 18px 18px;transition:.18s;z-index:3}.happy .eyes i{height:6px;border-radius:0 0 10px 10px}.happy .mouth{width:34px;height:14px;border-bottom-width:4px}.angry .eyes i,.steam .eyes i,.evil .eyes i{height:4px;border-radius:10px}.angry .eyes i:first-child,.steam .eyes i:first-child,.evil .eyes i:first-child{transform:rotate(20deg)}.angry .eyes i:last-child,.steam .eyes i:last-child,.evil .eyes i:last-child{transform:rotate(-20deg)}.angry .mouth,.steam .mouth,.lightning .mouth{height:0;border-radius:0}.surprised .mouth,.shock .mouth{width:12px;height:12px;border:3px solid #facc15;border-radius:50%}.tired .eyes i,.blink .eyes i{height:3px;border-radius:10px}.smirk .eyes i:last-child{height:5px}.smirk .mouth{transform:rotate(8deg)}",
   ".steam{position:absolute;inset:0;pointer-events:none;z-index:1}.steam span{position:absolute;bottom:72px;width:14px;height:26px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0));filter:blur(2px);opacity:0;animation:steam 1s ease-out infinite}.steam span:nth-child(1){left:20px}.steam span:nth-child(2){left:52px;animation-delay:.25s}.steam span:nth-child(3){right:20px;animation-delay:.5s}@keyframes steam{20%{opacity:.7}100%{transform:translateY(-28px) scale(1.3);opacity:0}}.bolt{position:absolute;inset:0;pointer-events:none}.bolt span{position:absolute;top:8px;width:18px;height:42px;background:#facc15;clip-path:polygon(45% 0,100% 0,63% 38%,100% 38%,35% 100%,52% 57%,15% 57%);filter:drop-shadow(0 0 10px rgba(250,204,21,.85));animation:flash .35s infinite alternate}.bolt span:first-child{left:-10px;transform:rotate(-12deg)}.bolt span:last-child{right:-10px;transform:rotate(12deg)}@keyframes flash{0%{opacity:.45}100%{opacity:1}}.neck{position:absolute;left:50%;top:177px;width:90px;height:65px;transform:translateX(-50%);background:#050505;border-radius:0 0 35px 35px;z-index:4}.logo{position:absolute;bottom:135px;left:50%;transform:translateX(-50%);color:#facc15;font-size:27px;font-weight:1000;letter-spacing:4px;z-index:8}.pocket{position:absolute;bottom:42px;left:50%;width:160px;height:66px;transform:translateX(-50%);border:2px solid rgba(255,255,255,.055);border-top:0;border-radius:0 0 20px 20px;z-index:8}",
   ".bubble{position:absolute;top:8px;left:50%;transform:translateX(-50%);max-width:235px;background:#fff8dc;color:#111;padding:10px 12px;border-radius:16px;font-size:13px;font-weight:900;text-align:center;z-index:35}.float{position:absolute;top:58px;left:50%;z-index:25;color:#facc15;font-size:31px;font-weight:1000;pointer-events:none;animation:float .65s ease forwards;text-shadow:0 3px 0 #000}@keyframes float{100%{opacity:0;transform:translate(-50%,-70px) scale(1.18)}}",
-  ".gold{position:absolute;left:-100px;z-index:20;width:82px;height:82px;border:0;background:transparent;padding:0;cursor:pointer;animation:flyR linear forwards;filter:drop-shadow(0 0 24px rgba(250,204,21,.75))}.gold.left{left:auto;right:-100px;animation-name:flyL}.gold i{position:absolute;left:14%;top:38%;width:62%;height:27%;border-radius:999px;background:linear-gradient(90deg,#7c4a00,#facc15,#fff2a8)}.gold b{position:absolute;right:10%;top:31%;width:27%;height:43%;border-radius:999px;background:#fff2a8;box-shadow:0 0 28px rgba(250,204,21,.95)}.gold.left b{right:auto;left:10%}.gold span{position:absolute;left:50%;top:-15px;transform:translateX(-50%);color:#facc15;font-size:13px;font-weight:1000}@keyframes flyR{100%{transform:translateX(calc(100vw + 200px));opacity:0}}@keyframes flyL{100%{transform:translateX(calc(-100vw - 200px));opacity:0}}",
-  ".cookie{position:absolute;top:-90px;z-index:28;width:70px;height:54px;cursor:pointer;border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff0b4,#d69535 64%,#8b4f12);box-shadow:inset -8px -10px 16px rgba(0,0,0,.22),0 14px 25px rgba(0,0,0,.35);animation:fall linear forwards;color:#2b1604;font-weight:1000;font-size:24px;display:flex;align-items:center;justify-content:center}.cookie i{position:absolute;left:32px;top:7px;width:4px;height:43px;background:rgba(78,38,10,.55)}@keyframes fall{100%{top:calc(100% + 100px);opacity:0;transform:rotate(24deg)}}.fortune,.win{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:45;width:min(88%,410px);border-radius:20px;padding:18px;text-align:center;box-shadow:0 25px 65px rgba(0,0,0,.58);cursor:pointer}.fortune{background:linear-gradient(180deg,#fff7d7,#f1d590);color:#1a1202;border:2px solid #facc15}.fortune b{display:inline-flex;margin-bottom:10px;padding:5px 9px;border-radius:999px;background:#1a1202;color:#facc15;font-size:11px;text-transform:uppercase}.fortune p{margin:0;font-size:20px;line-height:1.25;font-weight:900}.fortune small{display:block;margin-top:10px;color:rgba(26,18,2,.65);font-weight:900}.win{background:rgba(250,204,21,.97);color:#111;border:2px solid #fff2a8}.win b,.win span,.win strong{display:block}.win b{font-size:25px;text-transform:uppercase}.win strong{margin-top:10px;font-size:20px}",
+  ".keychain{position:absolute;left:-100px;z-index:20;width:86px;height:86px;border:0;background:transparent;padding:0;cursor:pointer;animation:flyR linear forwards;filter:drop-shadow(0 0 24px rgba(250,204,21,.75))}.keychain.left{left:auto;right:-100px;animation-name:flyL}.keychain i{position:absolute;left:18%;top:24%;width:52%;height:52%;border-radius:18px;background:linear-gradient(180deg,#222,#050505);border:2px solid #facc15;box-shadow:inset 0 0 18px rgba(250,204,21,.2),0 0 18px rgba(250,204,21,.35)}.keychain b{position:absolute;right:12%;top:10%;width:28px;height:28px;border-radius:50%;border:5px solid #facc15;background:transparent;box-shadow:0 0 18px rgba(250,204,21,.45)}.keychain em{position:absolute;left:31%;top:42%;width:28%;height:18%;border-radius:999px;background:#facc15;box-shadow:0 0 18px rgba(250,204,21,.75)}.keychain.secret2 i{background:linear-gradient(180deg,#3a2a05,#090909);border-color:#fff2a8}.keychain.secret2 em{background:#fff2a8}.keychain span{position:absolute;left:50%;top:-15px;transform:translateX(-50%);color:#facc15;font-size:13px;font-weight:1000}@keyframes flyR{100%{transform:translateX(calc(100vw + 200px));opacity:0}}@keyframes flyL{100%{transform:translateX(calc(-100vw - 200px));opacity:0}}",
+  ".cookie{position:absolute;top:-90px;z-index:28;width:70px;height:54px;cursor:pointer;border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff0b4,#d69535 64%,#8b4f12);box-shadow:inset -8px -10px 16px rgba(0,0,0,.22),0 14px 25px rgba(0,0,0,.35);animation:fall linear forwards;color:#2b1604;font-weight:1000;font-size:24px;display:flex;align-items:center;justify-content:center}.cookie i{position:absolute;left:32px;top:7px;width:4px;height:43px;background:rgba(78,38,10,.55)}@keyframes fall{100%{top:calc(100% + 100px);opacity:0;transform:rotate(24deg)}}.fortune,.win{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:45;width:min(88%,410px);border-radius:20px;padding:18px;text-align:center;box-shadow:0 25px 65px rgba(0,0,0,.58);cursor:pointer}.fortune{background:linear-gradient(180deg,#fff7d7,#f1d590);color:#1a1202;border:2px solid #facc15}.fortune b{display:inline-flex;margin-bottom:10px;padding:5px 9px;border-radius:999px;background:#1a1202;color:#facc15;font-size:11px;text-transform:uppercase}.fortune p{margin:0;font-size:20px;line-height:1.25;font-weight:900}.fortune small{display:block;margin-top:10px;color:rgba(26,18,2,.65);font-weight:900}.win{background:rgba(250,204,21,.97);color:#111;border:2px solid #fff2a8}.win b,.win span,.win strong,.win small{display:block}.win b{font-size:25px;text-transform:uppercase}.win strong{margin-top:8px;font-size:20px}.win small{margin-top:8px;font-weight:900;color:rgba(0,0,0,.68)}",
   ".rulesList{display:flex;flex-direction:column;gap:8px;color:#ddd;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px;margin-bottom:14px}.rulesList b{color:#facc15}.achModal{width:min(94vw,640px)}.achList{display:grid;gap:10px;max-height:46vh;overflow:auto;margin:0 0 14px}.ach{background:linear-gradient(180deg,#151515,#0b0b0b);border:1px solid #333;border-radius:16px;padding:12px;display:grid;gap:8px}.ach.open{border-color:rgba(250,204,21,.78);box-shadow:0 0 20px rgba(250,204,21,.12)}.ach.lock{opacity:.74}.achHead{display:flex;gap:12px;align-items:flex-start}.achIcon{width:54px;height:54px;min-width:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000}.achIcon.open{background:radial-gradient(circle at 35% 25%,#fff4a8,#facc15 55%,#b97900);color:#111;box-shadow:0 0 22px rgba(250,204,21,.28),inset 0 -8px 14px rgba(0,0,0,.18)}.achIcon.lock{background:linear-gradient(180deg,#2a2a2a,#111);color:#777;border:1px solid #3a3a3a}.achText{display:grid;gap:4px}.ach b{color:#facc15}.ach span,.ach small{color:#aaa}.ach em{font-style:normal;color:#111;background:#facc15;border-radius:10px;padding:7px 9px;font-weight:1000}.ach.lock em{background:#222;color:#888}.ach i{display:block;height:8px;background:#222;border-radius:999px;overflow:hidden}.ach i u{display:block;height:100%;background:linear-gradient(90deg,#facc15,#ffe58a)}",
   ".achToast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:120;width:min(92vw,420px);display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,#181818,#090909);border:1px solid rgba(250,204,21,.75);border-radius:18px;padding:12px;box-shadow:0 0 34px rgba(250,204,21,.25),0 18px 50px rgba(0,0,0,.6);animation:toastIn .25s ease}.achToastIcon{width:54px;height:54px;min-width:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fff4a8,#facc15 55%,#b97900);color:#111;font-size:27px;font-weight:1000;box-shadow:0 0 22px rgba(250,204,21,.28)}.achToast div:last-child{display:grid;gap:3px}.achToast b{color:#facc15;font-size:15px}.achToast span{font-size:14px;font-weight:900}.achToast em{font-style:normal;color:#111;background:#facc15;border-radius:9px;padding:5px 8px;font-size:12px;font-weight:1000}@keyframes toastIn{0%{opacity:0;transform:translateX(-50%) translateY(-18px) scale(.94)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}",
   ".rouletteO{z-index:130;background:rgba(0,0,0,.84)}.rouletteM{text-align:center;width:min(94vw,520px);border-color:rgba(250,204,21,.8);box-shadow:0 0 90px rgba(250,204,21,.25),0 30px 90px rgba(0,0,0,.8)}.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.slot{height:96px;border-radius:18px;background:linear-gradient(180deg,#070707,#1a1a1a);border:2px solid rgba(250,204,21,.55);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 24px rgba(0,0,0,.8),0 0 20px rgba(250,204,21,.12)}.slot span{font-size:48px;line-height:1}.slot.spinning .reel{display:grid;gap:18px;animation:reel .35s linear infinite}.slot.spinning:nth-child(2) .reel{animation-duration:.28s}.slot.spinning:nth-child(3) .reel{animation-duration:.23s}@keyframes reel{0%{transform:translateY(-188px)}100%{transform:translateY(188px)}}.promoBox{background:linear-gradient(180deg,#facc15,#d39b00);color:#111;border-radius:18px;padding:15px;margin:10px 0 14px;display:grid;gap:5px;box-shadow:0 0 26px rgba(250,204,21,.28)}.promoBox span{font-size:13px;font-weight:900}.promoBox b{font-size:30px;letter-spacing:2px}.promoBox small{font-weight:900;color:rgba(0,0,0,.68)}",
   ".bottom{max-width:1180px;margin:10px auto 0;color:#aaa;text-align:center;font-size:13px}.bottom b{color:#facc15}@media(max-width:900px){.game{max-width:460px;margin:0 auto}.main{grid-template-columns:1fr}.side{min-height:auto}.top{padding-right:0;margin-top:42px}}",
-  "@media(max-width:600px){.game{min-height:100dvh;width:100%;max-width:430px;margin:0 auto;padding:6px;display:flex;flex-direction:column}.prize{position:absolute;right:6px;top:6px;padding:6px 9px;font-size:11px}.overlay{padding:8px}.modal{width:100%;max-height:calc(100dvh - 16px);overflow:auto;padding:14px;border-radius:16px}.modal h2{font-size:20px}.modal p{font-size:12px}.top{margin:34px 0 5px;gap:6px;flex-direction:column-reverse}.sound{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px}.sound button{padding:8px 6px;font-size:10.5px}.title{padding:8px 10px}.title span{font-size:8px}h1{font-size:20px}.stats{width:100%;gap:5px;margin:0 0 6px}.stat{padding:7px 5px}.stat span{font-size:9px}.stat b{font-size:14px}.main{display:flex;flex-direction:column;gap:6px;flex:1}.zone{min-height:350px;height:53dvh;max-height:440px;border-radius:17px}.side{padding:0;border:0;background:transparent;border-radius:0;gap:6px}.info{display:none}.upgrade,.achBtn{padding:11px;font-size:12px}.adminWrap{width:232px;height:292px;margin-top:-4px}.admin{width:224px;height:292px}.glow{width:228px;height:228px}.body{width:180px;height:196px;bottom:8px}.shoulder{top:146px;width:56px;height:126px}.hood{width:146px;height:156px}.rim{top:30px;width:116px;height:126px}.face{top:54px;width:88px;height:76px}.eyes{gap:14px;margin-bottom:9px}.eyes i{width:8px;height:8px}.mouth{width:18px;height:7px;border-bottom-width:2px}.neck{top:121px;width:60px;height:44px}.logo{bottom:92px;font-size:18px;letter-spacing:2px}.pocket{bottom:28px;width:112px;height:44px}.bubble{max-width:182px;font-size:10.5px;padding:7px 9px;top:-2px}.float{top:36px;font-size:20px}.gold{width:60px;height:60px}.cookie{width:52px;height:40px;font-size:18px}.fortune,.win{width:90%;padding:13px;border-radius:15px}.fortune p{font-size:15px}.win b{font-size:17px}.win strong{font-size:15px}.achToast{top:48px;width:94vw;padding:10px}.achToastIcon{width:46px;height:46px;min-width:46px;font-size:22px}.slots{gap:6px;margin:12px 0}.slot{height:76px;border-radius:14px}.slot span{font-size:38px}.promoBox b{font-size:24px}.bottom{margin-top:5px;font-size:11px}}",
+  "@media(max-width:600px){.game{min-height:100dvh;width:100%;max-width:430px;margin:0 auto;padding:6px;display:flex;flex-direction:column}.prize{position:absolute;right:6px;top:6px;padding:6px 9px;font-size:11px}.overlay{padding:8px}.modal{width:100%;max-height:calc(100dvh - 16px);overflow:auto;padding:14px;border-radius:16px}.modal h2{font-size:20px}.modal p{font-size:12px}.top{margin:34px 0 5px;gap:6px;flex-direction:column-reverse}.sound{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5px}.sound button{padding:8px 6px;font-size:10.5px}.title{padding:8px 10px}.title span{font-size:8px}h1{font-size:20px}.stats{width:100%;gap:5px;margin:0 0 6px}.stat{padding:7px 5px}.stat span{font-size:9px}.stat b{font-size:14px}.main{display:flex;flex-direction:column;gap:6px;flex:1}.zone{min-height:350px;height:53dvh;max-height:440px;border-radius:17px}.side{padding:0;border:0;background:transparent;border-radius:0;gap:6px}.info{display:none}.upgrade,.achBtn{padding:11px;font-size:12px}.adminWrap{width:232px;height:292px;margin-top:-4px}.admin{width:224px;height:292px}.glow{width:228px;height:228px}.body{width:180px;height:196px;bottom:8px}.shoulder{top:146px;width:56px;height:126px}.hood{width:146px;height:156px}.rim{top:30px;width:116px;height:126px}.face{top:54px;width:88px;height:76px}.eyes{gap:14px;margin-bottom:9px}.eyes i{width:8px;height:8px}.mouth{width:18px;height:7px;border-bottom-width:2px}.neck{top:121px;width:60px;height:44px}.logo{bottom:92px;font-size:18px;letter-spacing:2px}.pocket{bottom:28px;width:112px;height:44px}.bubble{max-width:182px;font-size:10.5px;padding:7px 9px;top:-2px}.float{top:36px;font-size:20px}.keychain{width:60px;height:60px}.cookie{width:52px;height:40px;font-size:18px}.fortune,.win{width:90%;padding:13px;border-radius:15px}.fortune p{font-size:15px}.win b{font-size:17px}.win strong{font-size:15px}.achToast{top:48px;width:94vw;padding:10px}.achToastIcon{width:46px;height:46px;min-width:46px;font-size:22px}.slots{gap:6px;margin:12px 0}.slot{height:76px;border-radius:14px}.slot span{font-size:38px}.promoBox b{font-size:24px}.bottom{margin-top:5px;font-size:11px}}",
 ].join("\n");
